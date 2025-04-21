@@ -24,6 +24,10 @@ def roi_to_mesh(roi: ROI):
         pMesh=None
     )
 
+    if 0 in (dragonfly_mesh.getVertexCount(0), dragonfly_mesh.getEdgeCount(0)):
+        # TODO: handle this edge case better
+        return trimesh.Trimesh()
+
     # Smooth the mesh
     dragonfly_mesh.laplacianSmooth(2, 0, 0.3)
 
