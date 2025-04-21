@@ -51,4 +51,5 @@ class MainFormDsb(OrsAbstractWindow):
         self.ui.vtk_widget.clear()
         self.ui.vtk_widget.add_mesh(pv_mesh, color="lightgrey", opacity=0.3, show_edges=True)
         self.ui.vtk_widget.reset_camera()
-        # self.ui.vtk_widget.render() # This isn't needed but it doesn't hurt to be explicit
+        self.ui.vtk_widget.render()
+        self.ui.vtk_widget.show()
