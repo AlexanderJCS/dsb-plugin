@@ -56,5 +56,5 @@ class MainFormDsb(OrsAbstractWindow):
 
     @pyqtSlot()
     def closeEvent(self, event):
-        self.ui.vtk_widget.Finalize()  # Explicitly finalize
+        self.ui.vtk_widget.Finalize()  # Explicitly finalize to prevent a black screen upon exit of the plugin window
         super().closeEvent(event)
