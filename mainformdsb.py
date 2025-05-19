@@ -53,3 +53,8 @@ class MainFormDsb(OrsAbstractWindow):
         self.ui.vtk_widget.reset_camera()
         self.ui.vtk_widget.render()
         self.ui.vtk_widget.show()
+
+    @pyqtSlot()
+    def closeEvent(self, event):
+        self.ui.vtk_widget.Finalize()  # Explicitly finalize
+        super().closeEvent(event)
