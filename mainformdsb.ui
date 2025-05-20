@@ -27,18 +27,50 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QPushButton" name="btn_select_roi">
-     <property name="text">
-      <string>Select ROI</string>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <layout class="QVBoxLayout" name="verticalLayout_2">
+    <layout class="QVBoxLayout" name="main_vertical_layout" stretch="0,1,0,0">
      <item>
-      <widget class="QtInteractor" name="vtk_widget" native="true"/>
+      <widget class="QPushButton" name="btn_select_roi">
+       <property name="text">
+        <string>Select ROI</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QtInteractor" name="vis_widget" native="true"/>
+     </item>
+     <item>
+      <widget class="QSlider" name="sldr_neck_point">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QPushButton" name="btn_save_head">
+         <property name="text">
+          <string>Save Head</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btn_discard_head">
+         <property name="text">
+          <string>Discard Head</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
     </layout>
+   </item>
+   <item>
+    <widget class="QLabel" name="lbl_status">
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>
