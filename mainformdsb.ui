@@ -93,6 +93,12 @@
        </item>
        <item>
         <widget class="QPushButton" name="btn_preprocessing_run">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>26</height>
+          </size>
+         </property>
          <property name="text">
           <string>Run</string>
          </property>
@@ -120,13 +126,26 @@
       <layout class="QVBoxLayout" name="main_vertical_layout" stretch="0,1,0,0">
        <item>
         <widget class="QPushButton" name="btn_select_preprocessing_file">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>26</height>
+          </size>
+         </property>
          <property name="text">
           <string>Select Preprocessing File</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QtInteractor" name="vis_widget" native="true"/>
+        <widget class="QtInteractor" name="vis_widget" native="true">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>26</height>
+          </size>
+         </property>
+        </widget>
        </item>
        <item>
         <widget class="QSlider" name="sldr_neck_point">
@@ -139,6 +158,12 @@
         <layout class="QHBoxLayout" name="horizontalLayout">
          <item>
           <widget class="QPushButton" name="btn_save_head">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>26</height>
+            </size>
+           </property>
            <property name="text">
             <string>Save Head</string>
            </property>
@@ -146,6 +171,12 @@
          </item>
          <item>
           <widget class="QPushButton" name="btn_discard_head">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>26</height>
+            </size>
+           </property>
            <property name="text">
             <string>Discard Head</string>
            </property>

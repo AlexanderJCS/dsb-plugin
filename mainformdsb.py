@@ -1,18 +1,21 @@
+import math
 import os
+import tkinter as tk
+from tkinter import filedialog
 from typing import Optional
 
 import ORSModel
 import pyvista
-from ORSServiceClass.ORSWidget.chooseObjectAndNewName.chooseObjectAndNewName import ChooseObjectAndNewName
 from OrsLibraries.workingcontext import WorkingContext
 from ORSServiceClass.windowclasses.orsabstractwindow import OrsAbstractWindow
-from PyQt6.QtCore import pyqtSlot, Qt, QTimer, QCoreApplication
-from PyQt6.QtGui import QResizeEvent
-from PyQt6.QtWidgets import QDialog
+from PyQt6.QtCore import pyqtSlot
+from PyQt6.QtWidgets import QFileDialog
 
 from pipeline.preprocessing import meshhelper
 from pipeline import payload
+from pipeline import beheading
 from .ui_mainformdsb import Ui_MainFormDsb
+from visualize import visualize as vis
 
 
 class MainFormDsb(OrsAbstractWindow):
@@ -26,8 +29,8 @@ class MainFormDsb(OrsAbstractWindow):
 
 
     @pyqtSlot()
-    def on_btn_preprocess_run_clicked(self):
-        selected_roi = self.ui.ccb_dendrite_roi_chooser.getSelectedGuid()
+    def on_btn_preprocessing_run_clicked(self):
+        selected_roi = ORSModel.orsObj(self.ui.ccb_dendrite_roi_chooser.getSelectedGuid())
         if selected_roi is None:
             self.ui.lbl_status.setText("No ROI selected")
             return
@@ -47,6 +50,7 @@ class MainFormDsb(OrsAbstractWindow):
         self.ui.lbl_status.setText("Skeletonizing Mesh")
         skeleton = meshhelper.skeletonize_mesh(self.mesh)
 
+        self.ui.lbl_status.setText("Saving...")
         payload.save(
             payload.Payload(
                 dendrite_mesh=self.mesh,
@@ -54,6 +58,45 @@ class MainFormDsb(OrsAbstractWindow):
             ),
             filepath=filepath
         )
+        self.ui.lbl_status.setText("Saved!")
+
+    @pyqtSlot()
+    def on_btn_preprocessing_output_clicked(self):
+        filepath, _ = QFileDialog.getSaveFileName(
+            None,
+            "Select Output File Location",
+            "",
+            "DSB Files (*.dsb)"
+        )
+
+        if filepath:
+            self.ui.line_preprocessing_output_path.setText(filepath)
+        else:
+            self.ui.lbl_status.setText("No file selected")
+            return
+
+    @pyqtSlot()
+    def on_btn_select_preprocessing_file_clicked(self):
+        filepath, _ = QFileDialog.getOpenFileName(
+            None,
+            "Select Preprocessing File",
+            "",
+            "DSB Files (*.dsb)"
+        )
+
+        if not filepath:
+            self.ui.lbl_status.setText("No file selected")
+            return
+
+        pld = payload.load(filepath)
+        spine_skeletons, radii = beheading.gilloutine.get_branch_polylines_by_length(
+            pld.skeleton, min_length=0, max_length=50000, min_nodes=15, max_nodes=5000, radius_threshold=math.inf
+        )
+
+        self.ui.vis_widget.show()
+        visualizer = vis.Visualizer(self.ui.vis_widget, pld.dendrite_mesh, spine_skeletons)
+        self.ui.vis_widget.reset_camera()
+
 
     @pyqtSlot()
     def on_btn_select_roi_clicked(self):

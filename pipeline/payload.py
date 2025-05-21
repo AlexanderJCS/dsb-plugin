@@ -37,10 +37,10 @@ def load(filepath: str) -> Payload:
     """
 
     with zipfile.ZipFile(filepath, "r") as zf:
-        stl_bytes = zf.read("mesh.stl")
-        swc_bytes = zf.read("skeleton.swc")
+        mesh_bytes = zf.read("mesh.stl")
+        skel_bytes = zf.read("skeleton.pickle")
 
-    dendrite_mesh = trimesh.load(io.BytesIO(stl_bytes), force="mesh")
-    spine_skeletons = pickle.loads(swc_bytes)
+    dendrite_mesh = trimesh.load(io.BytesIO(mesh_bytes), force="mesh", file_type="stl")
+    spine_skeletons = pickle.loads(skel_bytes)
 
     return Payload(dendrite_mesh=dendrite_mesh, skeleton=spine_skeletons)
