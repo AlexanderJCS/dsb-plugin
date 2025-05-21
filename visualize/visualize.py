@@ -8,7 +8,6 @@ from pyvistaqt import QtInteractor
 class Visualizer:
     def __init__(self, interactor: QtInteractor, mesh: trimesh.Trimesh, spine_polylines: np.ndarray):
         self.plotter: QtInteractor = interactor
-        print("added mesh actor")
         self.mesh_actor = self.plotter.add_mesh(pv.wrap(mesh), opacity=0.3, color=(0.7, 0.7, 0.7))
 
         self.spine_polyline_actors = []
