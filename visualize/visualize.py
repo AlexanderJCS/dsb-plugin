@@ -25,7 +25,7 @@ class Visualizer:
         self.spine_point_actors = []
         for polyline in spine_polylines:
             self.spine_point_actors.append(
-                self.plotter.add_points(polyline[0], color=(1, 0, 0), point_size=10)
+                self.plotter.add_points(polyline[0], color="red", point_size=10, render_points_as_spheres=True)
             )
 
     def set_mesh(self, mesh: trimesh.Trimesh):
