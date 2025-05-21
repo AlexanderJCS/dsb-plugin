@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>450</width>
-    <height>450</height>
+    <width>732</width>
+    <height>741</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -27,43 +27,135 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <layout class="QVBoxLayout" name="main_vertical_layout" stretch="0,1,0,0">
-     <item>
-      <widget class="QPushButton" name="btn_select_roi">
-       <property name="text">
-        <string>Select ROI</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QtInteractor" name="vis_widget" native="true"/>
-     </item>
-     <item>
-      <widget class="QSlider" name="sldr_neck_point">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <layout class="QHBoxLayout" name="horizontalLayout">
+    <widget class="QTabWidget" name="">
+     <property name="tabShape">
+      <enum>QTabWidget::Rounded</enum>
+     </property>
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <property name="elideMode">
+      <enum>Qt::ElideNone</enum>
+     </property>
+     <widget class="QWidget" name="preprocessing">
+      <attribute name="title">
+       <string>Preprocessing</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
-        <widget class="QPushButton" name="btn_save_head">
-         <property name="text">
-          <string>Save Head</string>
+        <widget class="OrsObjectClassComboBox" name="ccb_dendrite_roi_chooser" native="true">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>26</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>20</height>
+          </size>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="btn_discard_head">
+        <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <item>
+          <widget class="QPushButton" name="btn_preprocessing_output">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>26</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Choose Output File</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="line_preprocessing_output_path">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>26</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btn_preprocessing_run">
          <property name="text">
-          <string>Discard Head</string>
+          <string>Run</string>
          </property>
         </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
        </item>
       </layout>
-     </item>
-    </layout>
+     </widget>
+     <widget class="QWidget" name="beheading" native="true">
+      <attribute name="title">
+       <string>Beheading</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="main_vertical_layout" stretch="0,1,0,0">
+       <item>
+        <widget class="QPushButton" name="btn_select_preprocessing_file">
+         <property name="text">
+          <string>Select Preprocessing File</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QtInteractor" name="vis_widget" native="true"/>
+       </item>
+       <item>
+        <widget class="QSlider" name="sldr_neck_point">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout">
+         <item>
+          <widget class="QPushButton" name="btn_save_head">
+           <property name="text">
+            <string>Save Head</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="btn_discard_head">
+           <property name="text">
+            <string>Discard Head</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+    </widget>
    </item>
    <item>
     <widget class="QLabel" name="lbl_status">
@@ -79,6 +171,12 @@
    <class>QtInteractor</class>
    <extends>QWidget</extends>
    <header>pyvistaqt</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>OrsObjectClassComboBox</class>
+   <extends>QWidget</extends>
+   <header>ORSServiceClass.ORSWidget.orsobjectclasscombobox.orsobjectclasscombobox</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

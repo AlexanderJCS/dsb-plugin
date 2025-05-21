@@ -1,5 +1,7 @@
+import skeletor as sk
 import trimesh
-from ORSModel.ors import ROI, Progress
+
+from ORSModel.ors import ROI
 
 
 def roi_to_mesh(roi: ROI):
@@ -40,3 +42,13 @@ def roi_to_mesh(roi: ROI):
     dragonfly_mesh.deleteObjectAndAllItsChildren()
 
     return trimesh.Trimesh(vertices=vertices, faces=faces)
+
+
+def skeletonize_mesh(mesh: trimesh.Trimesh) -> sk.Skeleton:
+    skel = sk.skeletonize.by_wavefront(mesh, origins=None, waves=1, step_size=1, radius_agg="percentile25")
+    sk.post.remove_bristles(skel, los_only=False, inplace=True)
+    sk.post.clean_up(skel, inplace=True, theta=1)
+    sk.post.despike(skel, inplace=True)
+
+    return skel
+

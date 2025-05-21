@@ -1,3 +1,4 @@
+import os
 from typing import Optional
 
 import ORSModel
@@ -9,7 +10,8 @@ from PyQt6.QtCore import pyqtSlot, Qt, QTimer, QCoreApplication
 from PyQt6.QtGui import QResizeEvent
 from PyQt6.QtWidgets import QDialog
 
-import preprocessing
+from pipeline.preprocessing import meshhelper
+from pipeline import payload
 from .ui_mainformdsb import Ui_MainFormDsb
 
 
@@ -18,36 +20,43 @@ class MainFormDsb(OrsAbstractWindow):
         super().__init__(implementation, parent)
         self.ui = Ui_MainFormDsb()
         self.ui.setupUi(self)
+        self.ui.ccb_dendrite_roi_chooser.setManagedClass([ORSModel.ROI])
         WorkingContext.registerOrsWidget('DSB_efd060071a1711f0b40cf83441a96bd5', implementation, 'MainFormDsb', self)
         self.mesh: Optional[pyvista.PolyData] = None
 
-    @staticmethod
-    def roi_dialog() -> Optional[ORSModel.ROI]:
-        chooser = ChooseObjectAndNewName(
-            managedClass=[ORSModel.ROI],
-            parent=WorkingContext.getCurrentContextWindow(),
-        )
-
-        chooser.setWindowTitle("Select an annotation or X to stop")
-        chooser.setWindowFlags(
-            Qt.WindowType.Window | Qt.WindowType.WindowTitleHint | Qt.WindowType.WindowCloseButtonHint
-        )
-
-        if chooser.exec() == QDialog.DialogCode.Rejected:
-            return None
-
-        guid = chooser.getObjectGUID()
-        roi = ORSModel.orsObj(guid)
-
-        return roi
 
     @pyqtSlot()
-    def on_btn_select_roi_clicked(self):
-        roi = self.roi_dialog()
-        if roi is None:
+    def on_btn_preprocess_run_clicked(self):
+        selected_roi = self.ui.ccb_dendrite_roi_chooser.getSelectedGuid()
+        if selected_roi is None:
             self.ui.lbl_status.setText("No ROI selected")
             return
 
+        filepath = self.ui.line_preprocessing_output_path.text()
+        if not filepath:
+            self.ui.lbl_status.setText("No output path selected")
+            return
+
+        if not os.path.isdir(os.path.dirname(filepath)):
+            self.ui.lbl_status.setText("Output path is invalid")
+            return
+
+        self.ui.lbl_status.setText("Converting ROI to Mesh")
+        self.mesh = meshhelper.roi_to_mesh(selected_roi)
+
+        self.ui.lbl_status.setText("Skeletonizing Mesh")
+        skeleton = meshhelper.skeletonize_mesh(self.mesh)
+
+        payload.save(
+            payload.Payload(
+                dendrite_mesh=self.mesh,
+                skeleton=skeleton
+            ),
+            filepath=filepath
+        )
+
+    @pyqtSlot()
+    def on_btn_select_roi_clicked(self):
         self.ui.lbl_status.setText("Converting ROI -> Mesh")
         # self.mesh = preprocessing.roi_to_mesh(roi)
         self.mesh = pyvista.Sphere()
