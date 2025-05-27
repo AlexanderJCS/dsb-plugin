@@ -187,19 +187,6 @@
            </property>
           </widget>
          </item>
-         <item>
-          <widget class="QPushButton" name="btn_discard_head">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>26</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>Discard Head</string>
-           </property>
-          </widget>
-         </item>
         </layout>
        </item>
       </layout>

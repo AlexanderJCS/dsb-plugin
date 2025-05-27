@@ -88,10 +88,6 @@ class Ui_MainFormDsb(object):
         self.btn_save_head.setMinimumSize(QtCore.QSize(0, 26))
         self.btn_save_head.setObjectName("btn_save_head")
         self.horizontalLayout.addWidget(self.btn_save_head)
-        self.btn_discard_head = QtWidgets.QPushButton(self.beheading)
-        self.btn_discard_head.setMinimumSize(QtCore.QSize(0, 26))
-        self.btn_discard_head.setObjectName("btn_discard_head")
-        self.horizontalLayout.addWidget(self.btn_discard_head)
         self.main_vertical_layout.addLayout(self.horizontalLayout)
         self.main_vertical_layout.setStretch(1, 1)
         self.tabWidget.addTab(self.beheading, "")
@@ -115,7 +111,6 @@ class Ui_MainFormDsb(object):
         self.btn_prev_spine.setText(_translate("MainFormDsb", "Previous Spine"))
         self.btn_next_spine.setText(_translate("MainFormDsb", "Next Spine"))
         self.btn_save_head.setText(_translate("MainFormDsb", "Save Head"))
-        self.btn_discard_head.setText(_translate("MainFormDsb", "Discard Head"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.beheading), _translate("MainFormDsb", "Beheading"))
 from ORSServiceClass.ORSWidget.orsobjectclasscombobox.orsobjectclasscombobox import OrsObjectClassComboBox
 from pyvistaqt import QtInteractor

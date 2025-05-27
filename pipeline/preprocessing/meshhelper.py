@@ -1,7 +1,8 @@
+import numpy as np
 import skeletor as sk
 import trimesh
 
-from ORSModel.ors import ROI
+from ORSModel.ors import ROI, FaceVertexMesh
 
 
 def roi_to_mesh(roi: ROI):
@@ -42,6 +43,39 @@ def roi_to_mesh(roi: ROI):
     dragonfly_mesh.deleteObjectAndAllItsChildren()
 
     return trimesh.Trimesh(vertices=vertices, faces=faces)
+
+
+def mesh_to_ors(mesh: trimesh.Trimesh) -> FaceVertexMesh:
+    """
+    Converts a processing.mesh.Mesh object to a Dragonfly ORS mesh. Used for displaying the final mesh to the user.
+    Precondition: The mesh is not none
+
+    :param mesh: The mesh to convert
+    :return: The Dragonfly ORS mesh
+    """
+
+    np_vertices = np.asarray(mesh.vertices, dtype=np.float64).flatten()
+    np_triangles = np.asarray(mesh.triangles).flatten()
+
+    # divide vertices by 1e9 to get meters instead of nanometers
+    np_vertices = np_vertices / 1e9
+
+    ors_mesh = FaceVertexMesh()
+    ors_mesh.setTSize(1)  # set the time dimension
+
+    ors_mesh_vertices = ors_mesh.getVertices(0)
+    ors_mesh_vertices.setSize(len(np_vertices))
+
+    for i in range(len(np_vertices)):
+        ors_mesh_vertices.atPut(i, np_vertices[i])
+
+    ors_triangles = ors_mesh.getEdges(0)
+    ors_triangles.setSize(len(np_triangles))
+
+    for i in range(len(np_triangles)):
+        ors_triangles.atPut(i, np_triangles[i])
+
+    return ors_mesh
 
 
 def skeletonize_mesh(mesh: trimesh.Trimesh) -> sk.Skeleton:

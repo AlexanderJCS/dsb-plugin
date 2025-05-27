@@ -3,6 +3,7 @@ import os
 from typing import Optional
 
 import ORSModel
+import numpy as np
 import pyvista
 import trimesh
 from OrsLibraries.workingcontext import WorkingContext
@@ -190,6 +191,45 @@ class MainFormDsb(OrsAbstractWindow):
 
         self.neck_point_slider_values[current_idx] = value
         self.visualizer.set_spine_point(current_idx, neck_pt_3d)
+
+    @pyqtSlot()
+    def on_btn_save_head_clicked(self):
+        current_idx = self.visualizer.currently_visualizing
+
+        if (self.mesh is None
+                or current_idx is None
+                or current_idx >= len(self.neck_point_slider_values)
+        ):
+            return
+
+        accumulated = geom.accumulate(self.spine_skeletons[current_idx])
+        spine_len = accumulated[-1]
+        slider_max = self.ui.sldr_neck_point.maximum()
+        neck_pt_1d = spine_len * (slider_max - self.neck_point_slider_values[current_idx]) / slider_max
+        neck_pt_3d, tangent = geom.point_and_tangent_along_polyline(
+            self.spine_skeletons[current_idx], neck_pt_1d
+        )
+
+        beheaded = self.mesh.slice_plane(neck_pt_3d, -tangent, cap=True)
+
+        closest_component = None
+        closest_component_dist = np.inf
+
+        for component in beheaded.split(only_watertight=False):
+            dist = trimesh.proximity.closest_point(component, [neck_pt_3d])[1][0]
+
+            if dist < closest_component_dist:
+                closest_component = component
+                closest_component_dist = dist
+
+        if closest_component is None:
+            self.ui.lbl_status.setText("No component found for base - cancelling beheading")
+            return
+
+        ors_mesh = meshhelper.mesh_to_ors(mesh=closest_component)
+        ors_mesh.setTitle(f"Spine Head no. {current_idx + 1}")
+        ors_mesh.publish()
+        self.ui.lbl_status.setText(f"Spine Head no. {current_idx + 1} Created")
 
     @pyqtSlot()
     def closeEvent(self, event):
