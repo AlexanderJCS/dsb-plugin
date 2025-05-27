@@ -103,7 +103,7 @@ class Ui_MainFormDsb(object):
 
     def retranslateUi(self, MainFormDsb):
         _translate = QtCore.QCoreApplication.translate
-        MainFormDsb.setWindowTitle(_translate("MainFormDsb", "Form"))
+        MainFormDsb.setWindowTitle(_translate("MainFormDsb", "DSB"))
         self.btn_preprocessing_output.setText(_translate("MainFormDsb", "Choose Output File"))
         self.btn_preprocessing_run.setText(_translate("MainFormDsb", "Run"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.preprocessing), _translate("MainFormDsb", "Preprocessing"))
