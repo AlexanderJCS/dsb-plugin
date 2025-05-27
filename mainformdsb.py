@@ -14,7 +14,6 @@ from pipeline.beheading import skel_helper, spine_analysis, polyline_utils
 from pipeline.preprocessing import meshhelper
 from pipeline.beheading import geometry as geom
 from pipeline import payload
-from pipeline import beheading
 from .ui_mainformdsb import Ui_MainFormDsb
 from visualize import visualize as vis
 
@@ -88,10 +87,10 @@ class MainFormDsb(OrsAbstractWindow):
             return None, None
 
         spine_skeleton = self.spine_skeletons[idx]
-        spacing = 3
+        spacing = 6
 
         points_tangents, radii_tangents = skel_helper.get_radius_polyline(
-            spine_skeleton[::-1], self.mesh, n_rays=200, aggregate='percentile99',
+            spine_skeleton[::-1], self.mesh, n_rays=150, aggregate='percentile99',
             projection='tangents', path_interpolation_spacing=spacing
         )
 
