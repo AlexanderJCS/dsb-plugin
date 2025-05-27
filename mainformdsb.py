@@ -26,7 +26,8 @@ class MainFormDsb(OrsAbstractWindow):
         self.ui.ccb_dendrite_roi_chooser.setManagedClass([ORSModel.ROI])
         WorkingContext.registerOrsWidget('DSB_efd060071a1711f0b40cf83441a96bd5', implementation, 'MainFormDsb', self)
         self.mesh: Optional[pyvista.PolyData] = None
-
+        self.visualizer = None
+        self.spine_skeletons = None
 
     @pyqtSlot()
     def on_btn_preprocessing_run_clicked(self):
@@ -76,6 +77,36 @@ class MainFormDsb(OrsAbstractWindow):
             return
 
     @pyqtSlot()
+    def on_btn_prev_spine_clicked(self):
+        if self.visualizer is None:
+            self.ui.lbl_status.setText("Load a preprocessing file first")
+            return
+
+        vis_current = self.visualizer.currently_visualizing
+        vis_next = (vis_current - 1) if vis_current is not None else 0
+        vis_next %= len(self.visualizer.spine_polyline_actors)
+
+        if not self.visualizer.has_spine_point(vis_next):
+            self.visualizer.set_spine_point(vis_next, self.spine_skeletons[vis_next][0])
+
+        self.visualizer.vis_spine_idx(vis_next)
+
+    @pyqtSlot()
+    def on_btn_next_spine_clicked(self):
+        if self.visualizer is None:
+            self.ui.lbl_status.setText("Load a preprocessing file first")
+            return
+
+        vis_current = self.visualizer.currently_visualizing
+        vis_next = (vis_current + 1) if vis_current is not None else 0
+        vis_next %= len(self.visualizer.spine_polyline_actors)
+
+        if not self.visualizer.has_spine_point(vis_next):
+            self.visualizer.set_spine_point(vis_next, self.spine_skeletons[vis_next][0])
+
+        self.visualizer.vis_spine_idx(vis_next)
+
+    @pyqtSlot()
     def on_btn_select_preprocessing_file_clicked(self):
         filepath, _ = QFileDialog.getOpenFileName(
             None,
@@ -89,23 +120,12 @@ class MainFormDsb(OrsAbstractWindow):
             return
 
         pld = payload.load(filepath)
-        spine_skeletons, radii = beheading.gilloutine.get_branch_polylines_by_length(
+        self.spine_skeletons, radii = beheading.gilloutine.get_branch_polylines_by_length(
             pld.skeleton, min_length=0, max_length=50000, min_nodes=15, max_nodes=5000, radius_threshold=math.inf
         )
 
         self.ui.vis_widget.show()
-        visualizer = vis.Visualizer(self.ui.vis_widget, pld.dendrite_mesh, spine_skeletons)
-        self.ui.vis_widget.reset_camera()
-
-
-    @pyqtSlot()
-    def on_btn_select_roi_clicked(self):
-        self.ui.lbl_status.setText("Converting ROI -> Mesh")
-        # self.mesh = preprocessing.roi_to_mesh(roi)
-        self.mesh = pyvista.Sphere()
-
-        self.ui.lbl_status.setText("Visualizing ROI")
-        self.ui.vis_widget.add_mesh(self.mesh)
+        self.visualizer = vis.Visualizer(self.ui.vis_widget, pld.dendrite_mesh, self.spine_skeletons)
         self.ui.vis_widget.reset_camera()
 
     @pyqtSlot(int)
