@@ -18,8 +18,17 @@ def point_and_tangent_along_polyline(polyline, dist_along_skel) -> tuple[np.ndar
     :return: (the 3D point, the normal)
     """
 
+    # TODO: verify this implementation of tangent interpolation is correct
+
     accumulated_dist = 0
-    for point, last_point in zip(polyline[1:], polyline[:-1]):
+    for i, point in enumerate(polyline):
+        if i < 2 or i == len(polyline) - 1:
+            continue
+
+        last_point = polyline[i - 1]
+        last_last_point = polyline[i - 2]
+        next_point = polyline[i + 1]
+
         dist = np.linalg.norm(point - last_point)
         accumulated_dist += dist
 
@@ -30,7 +39,10 @@ def point_and_tangent_along_polyline(polyline, dist_along_skel) -> tuple[np.ndar
         additional_dist = dist_along_skel - last_accumulated_dist
         percent_interpolate = additional_dist / dist
 
-        return lerp(last_point, point, percent_interpolate), normalize(point - last_point)
+        last_point_tangent = point - last_last_point
+        this_point_tangent = next_point - last_point
+
+        return lerp(last_point, point, percent_interpolate), lerp(normalize(last_point_tangent), normalize(this_point_tangent), percent_interpolate)
 
     return polyline[-1], normalize(polyline[-1] - polyline[-2])
 
