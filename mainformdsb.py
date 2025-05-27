@@ -26,7 +26,7 @@ class MainFormDsb(OrsAbstractWindow):
         self.ui.setupUi(self)
         self.ui.ccb_dendrite_roi_chooser.setManagedClass([ORSModel.ROI])
         WorkingContext.registerOrsWidget('DSB_efd060071a1711f0b40cf83441a96bd5', implementation, 'MainFormDsb', self)
-        self.mesh: Optional[pyvista.PolyData] = None
+        self.mesh: Optional[trimesh.Trimesh] = None
         self.visualizer = None
         self.spine_skeletons = None
 
