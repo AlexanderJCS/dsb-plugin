@@ -24,10 +24,12 @@ class MainFormDsb(OrsAbstractWindow):
         self.ui = Ui_MainFormDsb()
         self.ui.setupUi(self)
         self.ui.ccb_dendrite_roi_chooser.setManagedClass([ORSModel.ROI])
+        self.ui.sldr_neck_point.setMaximum(1000)
         WorkingContext.registerOrsWidget('DSB_efd060071a1711f0b40cf83441a96bd5', implementation, 'MainFormDsb', self)
         self.mesh: Optional[trimesh.Trimesh] = None
         self.visualizer = None
         self.spine_skeletons = None
+        self.neck_point_slider_values = []
 
     @pyqtSlot()
     def on_btn_preprocessing_run_clicked(self):
@@ -80,7 +82,7 @@ class MainFormDsb(OrsAbstractWindow):
         """
         Computes the neck point of the spine
 
-        :return: The neck point as a 3D coordinate and the neck tangent as a 3D vector
+        :return: (neck point 3D, neck tangent vector, neck point 1D)
         """
 
         if self.mesh is None or self.spine_skeletons is None:
@@ -96,44 +98,34 @@ class MainFormDsb(OrsAbstractWindow):
 
         cumulative_points = geom.accumulate(points_tangents)
 
-        neck_point_1d = spine_analysis.find_neck_point_from_head_radius(spine_skeleton[::-1], self.mesh, cumulative_points,
-                                                            radii_tangents)
+        neck_point_1d = spine_analysis.find_neck_point_from_head_radius(
+            spine_skeleton[::-1], self.mesh, cumulative_points, radii_tangents
+        )
 
         neck_point_3d, neck_tangent = geom.point_and_tangent_along_polyline(spine_skeleton, neck_point_1d)
-        return neck_point_3d, neck_tangent
+        return neck_point_3d, neck_tangent, neck_point_1d
 
-    @pyqtSlot()
-    def on_btn_prev_spine_clicked(self):
-        if self.visualizer is None:
-            self.ui.lbl_status.setText("Load a preprocessing file first")
-            return None, None
+    def jump_vis(self, n: int) -> None:
+        """
+        Jumps n spines forward or backward in the visualization.
+        :param n: -1 to jump backward, 1 to jump forward, 0 to reload the current spine, etc.
+        """
 
-        vis_current = self.visualizer.currently_visualizing
-        vis_next = (vis_current - 1) if vis_current is not None else 0
-        vis_next %= len(self.visualizer.spine_polyline_actors)
-
-        if not self.visualizer.has_spine_point(vis_next):
-            neck_pt, tangent = self.compute_neck_point_and_tangent(vis_next)
-            if neck_pt is None or tangent is None:
-                self.ui.lbl_status.setText("Failed to compute neck point and tangent")
-                return
-
-            self.visualizer.set_spine_point(vis_next, neck_pt)
-
-        self.visualizer.vis_spine_idx(vis_next)
-
-    @pyqtSlot()
-    def on_btn_next_spine_clicked(self):
         if self.visualizer is None:
             self.ui.lbl_status.setText("Load a preprocessing file first")
             return
 
         vis_current = self.visualizer.currently_visualizing
-        vis_next = (vis_current + 1) if vis_current is not None else 0
+        vis_next = (vis_current + n) if vis_current is not None else 0
         vis_next %= len(self.visualizer.spine_polyline_actors)
 
         if not self.visualizer.has_spine_point(vis_next):
-            neck_pt, tangent = self.compute_neck_point_and_tangent(vis_next)
+            # Compute the neck point and tangent for the next spine
+            neck_pt, tangent, neck_pt_1d = self.compute_neck_point_and_tangent(vis_next)
+
+            accumulated = geom.accumulate(self.spine_skeletons[vis_next])
+            self.neck_point_slider_values[vis_next] = int((accumulated[-1] - neck_pt_1d) / accumulated[-1] * self.ui.sldr_neck_point.maximum())
+
             if neck_pt is None or tangent is None:
                 self.ui.lbl_status.setText("Failed to compute neck point and tangent")
                 return
@@ -141,6 +133,15 @@ class MainFormDsb(OrsAbstractWindow):
             self.visualizer.set_spine_point(vis_next, neck_pt)
 
         self.visualizer.vis_spine_idx(vis_next)
+        self.ui.sldr_neck_point.setValue(self.neck_point_slider_values[vis_next])
+
+    @pyqtSlot()
+    def on_btn_prev_spine_clicked(self):
+        self.jump_vis(-1)
+
+    @pyqtSlot()
+    def on_btn_next_spine_clicked(self):
+        self.jump_vis(1)
 
     @pyqtSlot()
     def on_btn_select_preprocessing_file_clicked(self):
@@ -160,19 +161,33 @@ class MainFormDsb(OrsAbstractWindow):
         self.spine_skeletons, radii = polyline_utils.get_branch_polylines_by_length(
             pld.skeleton, min_length=0, max_length=50000, min_nodes=15, max_nodes=5000, radius_threshold=math.inf
         )
+        self.neck_point_slider_values = [0 for _ in range(len(self.spine_skeletons))]
 
         self.ui.vis_widget.show()
         self.visualizer = vis.Visualizer(self.ui.vis_widget, pld.dendrite_mesh, self.spine_skeletons)
         self.ui.vis_widget.reset_camera()
+        self.jump_vis(0)
 
     @pyqtSlot(int)
     def on_sldr_neck_point_valueChanged(self, value):
-        percent = value / self.ui.sldr_neck_point.maximum()
+        current_idx = self.visualizer.currently_visualizing
 
-        if self.mesh is None:
+        if (self.mesh is None
+            or current_idx is None
+            or current_idx >= len(self.neck_point_slider_values)
+        ):
             return
 
-        self.mesh.translate([0, 0, percent * 10], inplace=True)
+        accumulated = geom.accumulate(self.spine_skeletons[current_idx])
+        spine_len = accumulated[-1]
+        slider_max = self.ui.sldr_neck_point.maximum()
+        neck_pt_1d = spine_len * (slider_max - value) / slider_max
+        neck_pt_3d, _ = geom.point_and_tangent_along_polyline(
+            self.spine_skeletons[current_idx], neck_pt_1d
+        )
+
+        self.neck_point_slider_values[current_idx] = value
+        self.visualizer.set_spine_point(current_idx, neck_pt_3d)
 
     @pyqtSlot()
     def closeEvent(self, event):

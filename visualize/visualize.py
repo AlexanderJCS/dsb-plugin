@@ -151,11 +151,21 @@ class Visualizer:
         :param point_loc: The location of the point actor.
         """
 
-        if not self.has_spine_point(idx):
-            self.spine_point_actors[idx] = self.plotter.add_points(point_loc, color=(1, 0, 0), render_points_as_spheres=True, point_size=10)
-        else:
-            self.spine_point_actors[idx].position = point_loc
-            self.plotter.update()
+        # TODO: a more elegant solution would be to calculate the offset from the current position and move it
+        #  instead of removing and adding in the case that the actor already exists
+
+        # If it already exists, remove it
+        if self.has_spine_point(idx):
+            self.plotter.remove_actor(self.spine_point_actors[idx], reset_camera=False, render=False)
+
+        # Add a fresh point at the new absolute location
+        self.spine_point_actors[idx] = self.plotter.add_points(
+            point_loc,
+            color=(1, 0, 0),
+            render_points_as_spheres=True,
+            point_size=10,
+        )
+        self.plotter.render()  # force an update
 
     def vis_spine_idx(self, idx: int) -> None:
         for actor in self.active_actors:
