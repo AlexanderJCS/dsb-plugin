@@ -4,6 +4,7 @@ import trimesh
 
 import numpy as np
 import pyvista as pv
+import vtk
 from pyvistaqt import QtInteractor
 
 
@@ -68,6 +69,28 @@ def line_actor(lines, color='w', width=5, connected=False):
     return actor
 
 
+
+def axis_angle_from_normals(n_src, n_dst):
+    """Return (axis, angle_degrees) rotating n_src→n_dst."""
+    n1 = np.asarray(n_src, float) / np.linalg.norm(n_src)
+    n2 = np.asarray(n_dst, float) / np.linalg.norm(n_dst)
+    # angle between
+    cosine = np.clip(np.dot(n1, n2), -1.0, 1.0)
+    angle = np.degrees(np.arccos(cosine))
+    # if nearly parallel or antiparallel, handle specially
+    if angle < 1e-6:
+        return np.array([1,0,0]), 0.0        # no rotation
+    if abs(angle - 180.0) < 1e-6:
+        # pick any perpendicular axis:
+        axis = np.cross(n1, [1,0,0])
+        if np.linalg.norm(axis) < 1e-6:
+            axis = np.cross(n1, [0,1,0])
+        return axis/np.linalg.norm(axis), angle
+    # general case
+    axis = np.cross(n1, n2)
+    return axis/np.linalg.norm(axis), angle
+
+
 class Visualizer:
     def __init__(self, interactor: QtInteractor, mesh: trimesh.Trimesh, spine_polylines: np.ndarray):
         self.plotter: QtInteractor = interactor
@@ -84,6 +107,27 @@ class Visualizer:
         self.spine_point_actors: list[typing.Optional[pv.Actor]] = [None for _ in range(len(spine_polylines))]
 
         self.currently_visualizing: typing.Optional[int] = None
+
+        self.plane = pv.Plane(i_size=1000, j_size=1000)
+        self.original_plane_pts = self.plane.points.copy()
+        self.plane_actor = self.plotter.add_mesh(
+            self.plane,
+            color="lightblue",
+            opacity=0.9,
+            name="rotating_plane"
+        )
+
+    def transform_plane(self, center, normal):
+        # 1) Restore the original point positions
+        self.plane.points = self.original_plane_pts.copy()
+
+        # 2) Apply your axis–angle + translate
+        axis, angle = axis_angle_from_normals([0, 0, 1], normal)
+        self.plane.rotate_vector(axis.tolist(), angle, inplace=True)
+        self.plane.translate(center, inplace=True)
+
+        # 3) Redraw
+        self.plotter.render()
 
     def set_mesh(self, mesh: trimesh.Trimesh):
         if self.mesh_actor is not None:

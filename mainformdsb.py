@@ -182,9 +182,11 @@ class MainFormDsb(OrsAbstractWindow):
         spine_len = accumulated[-1]
         slider_max = self.ui.sldr_neck_point.maximum()
         neck_pt_1d = spine_len * (slider_max - value) / slider_max
-        neck_pt_3d, _ = geom.point_and_tangent_along_polyline(
+        neck_pt_3d, tangent = geom.point_and_tangent_along_polyline(
             self.spine_skeletons[current_idx], neck_pt_1d
         )
+
+        self.visualizer.transform_plane(neck_pt_3d, tangent)
 
         self.neck_point_slider_values[current_idx] = value
         self.visualizer.set_spine_point(current_idx, neck_pt_3d)
