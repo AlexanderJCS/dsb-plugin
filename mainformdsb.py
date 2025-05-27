@@ -1,17 +1,18 @@
 import math
 import os
-import tkinter as tk
-from tkinter import filedialog
 from typing import Optional
 
 import ORSModel
 import pyvista
+import trimesh
 from OrsLibraries.workingcontext import WorkingContext
 from ORSServiceClass.windowclasses.orsabstractwindow import OrsAbstractWindow
 from PyQt6.QtCore import pyqtSlot
 from PyQt6.QtWidgets import QFileDialog
 
+from pipeline.beheading import skel_helper, spine_analysis, polyline_utils
 from pipeline.preprocessing import meshhelper
+from pipeline.beheading import geometry as geom
 from pipeline import payload
 from pipeline import beheading
 from .ui_mainformdsb import Ui_MainFormDsb
@@ -76,18 +77,49 @@ class MainFormDsb(OrsAbstractWindow):
             self.ui.lbl_status.setText("No file selected")
             return
 
+    def compute_neck_point_and_tangent(self, idx: int):
+        """
+        Computes the neck point of the spine
+
+        :return: The neck point as a 3D coordinate and the neck tangent as a 3D vector
+        """
+
+        if self.mesh is None or self.spine_skeletons is None:
+            return None, None
+
+        spine_skeleton = self.spine_skeletons[idx]
+        spacing = 3
+
+        points_tangents, radii_tangents = skel_helper.get_radius_polyline(
+            spine_skeleton[::-1], self.mesh, n_rays=200, aggregate='percentile99',
+            projection='tangents', path_interpolation_spacing=spacing
+        )
+
+        cumulative_points = geom.accumulate(points_tangents)
+
+        neck_point_1d = spine_analysis.find_neck_point_from_head_radius(spine_skeleton[::-1], self.mesh, cumulative_points,
+                                                            radii_tangents)
+
+        neck_point_3d, neck_tangent = geom.point_and_tangent_along_polyline(spine_skeleton, neck_point_1d)
+        return neck_point_3d, neck_tangent
+
     @pyqtSlot()
     def on_btn_prev_spine_clicked(self):
         if self.visualizer is None:
             self.ui.lbl_status.setText("Load a preprocessing file first")
-            return
+            return None, None
 
         vis_current = self.visualizer.currently_visualizing
         vis_next = (vis_current - 1) if vis_current is not None else 0
         vis_next %= len(self.visualizer.spine_polyline_actors)
 
         if not self.visualizer.has_spine_point(vis_next):
-            self.visualizer.set_spine_point(vis_next, self.spine_skeletons[vis_next][0])
+            neck_pt, tangent = self.compute_neck_point_and_tangent(vis_next)
+            if neck_pt is None or tangent is None:
+                self.ui.lbl_status.setText("Failed to compute neck point and tangent")
+                return
+
+            self.visualizer.set_spine_point(vis_next, neck_pt)
 
         self.visualizer.vis_spine_idx(vis_next)
 
@@ -102,7 +134,12 @@ class MainFormDsb(OrsAbstractWindow):
         vis_next %= len(self.visualizer.spine_polyline_actors)
 
         if not self.visualizer.has_spine_point(vis_next):
-            self.visualizer.set_spine_point(vis_next, self.spine_skeletons[vis_next][0])
+            neck_pt, tangent = self.compute_neck_point_and_tangent(vis_next)
+            if neck_pt is None or tangent is None:
+                self.ui.lbl_status.setText("Failed to compute neck point and tangent")
+                return
+
+            self.visualizer.set_spine_point(vis_next, neck_pt)
 
         self.visualizer.vis_spine_idx(vis_next)
 
@@ -120,7 +157,8 @@ class MainFormDsb(OrsAbstractWindow):
             return
 
         pld = payload.load(filepath)
-        self.spine_skeletons, radii = beheading.gilloutine.get_branch_polylines_by_length(
+        self.mesh = pld.dendrite_mesh
+        self.spine_skeletons, radii = polyline_utils.get_branch_polylines_by_length(
             pld.skeleton, min_length=0, max_length=50000, min_nodes=15, max_nodes=5000, radius_threshold=math.inf
         )
 
