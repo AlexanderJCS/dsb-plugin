@@ -212,7 +212,7 @@ class MainFormDsb(OrsAbstractWindow):
 
         beheaded = self.mesh.slice_plane(neck_pt_3d, -tangent, cap=True)
 
-        closest_component = None
+        closest_component: Optional[trimesh.Trimesh] = None
         closest_component_dist = np.inf
 
         for component in beheaded.split(only_watertight=False):
