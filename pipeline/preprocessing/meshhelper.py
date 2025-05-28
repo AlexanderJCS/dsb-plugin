@@ -55,7 +55,7 @@ def mesh_to_ors(mesh: trimesh.Trimesh) -> FaceVertexMesh:
     """
 
     np_vertices = np.asarray(mesh.vertices, dtype=np.float64).flatten()
-    np_triangles = np.asarray(mesh.triangles).flatten()
+    np_indices = np.asarray(mesh.faces).flatten()
 
     # divide vertices by 1e9 to get meters instead of nanometers
     np_vertices = np_vertices / 1e9
@@ -69,11 +69,11 @@ def mesh_to_ors(mesh: trimesh.Trimesh) -> FaceVertexMesh:
     for i in range(len(np_vertices)):
         ors_mesh_vertices.atPut(i, np_vertices[i])
 
-    ors_triangles = ors_mesh.getEdges(0)
-    ors_triangles.setSize(len(np_triangles))
+    ors_indices = ors_mesh.getEdges(0)
+    ors_indices.setSize(len(np_indices))
 
-    for i in range(len(np_triangles)):
-        ors_triangles.atPut(i, np_triangles[i])
+    for i in range(len(np_indices)):
+        ors_indices.atPut(i, np_indices[i])
 
     return ors_mesh
 
