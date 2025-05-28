@@ -6,47 +6,46 @@ def lerp(a, b, t):
 
 
 def normalize(vec: np.ndarray):
-    return vec / np.linalg.norm(vec)
+    return vec / np.linalg.norm(vec, axis=-1, keepdims=True)
 
 
-def point_and_tangent_along_polyline(polyline, dist_along_skel) -> tuple[np.ndarray, np.ndarray]:
+def compute_polyline_vertex_tangents(vertices: np.ndarray) -> np.ndarray:
     """
-    Finds the point along a polyline that is n distance from the start. Linearly interpolates the points.
+    Computes the tangents for each vertex in a polyline.
 
-    :param polyline: The polyline
-    :param dist_along_skel: The distance from the start
-    :return: (the 3D point, the normal)
+    :param vertices: The vertices of the polyline (shape: [N, 3])
+    :return: Tangents for each vertex (shape: [N, 3])
     """
 
-    # TODO: verify this implementation of tangent interpolation is correct
+    tangents = np.empty_like(vertices, dtype=np.float64)
+    tangents[1:-1] = normalize(vertices[2:] - vertices[:-2])
+    tangents[0] = normalize(vertices[1] - vertices[0])
+    tangents[-1] = normalize(vertices[-1] - vertices[-2])
 
-    accumulated_dist = 0
-    for i, point in enumerate(polyline):
-        if i < 2 or i == len(polyline) - 1:
-            continue
+    return tangents
 
-        last_point = polyline[i - 1]
-        last_last_point = polyline[i - 2]
-        next_point = polyline[i + 1]
-
-        dist = np.linalg.norm(point - last_point)
-        accumulated_dist += dist
-
-        if accumulated_dist < dist_along_skel:
-            continue
-
-        last_accumulated_dist = accumulated_dist - dist
-        additional_dist = dist_along_skel - last_accumulated_dist
-        percent_interpolate = additional_dist / dist
-
-        last_point_tangent = point - last_last_point
-        this_point_tangent = next_point - last_point
-
-        return lerp(last_point, point, percent_interpolate), lerp(normalize(last_point_tangent), normalize(this_point_tangent), percent_interpolate)
-
-    return polyline[-1], normalize(polyline[-1] - polyline[-2])
 
 
 def accumulate(polyline: np.ndarray) -> np.ndarray:
     segment_lengths = np.linalg.norm(polyline[1:] - polyline[:-1], axis=1)
     return np.cumsum(segment_lengths)
+
+
+def point_and_tangent_along_polyline(polyline, dist_along_skel) -> tuple[np.ndarray, np.ndarray]:
+    tangents = compute_polyline_vertex_tangents(polyline)
+    cumulative = np.concatenate([[0], accumulate(polyline)])
+
+    index = np.searchsorted(cumulative, dist_along_skel, side="right")
+    index = np.clip(index, 1, len(polyline) - 1)
+
+    prev_tangent = tangents[index - 1]
+    prev_vert = polyline[index - 1]
+    prev_cumulative = cumulative[index - 1]
+    this_tangent = tangents[index]
+    this_vert = polyline[index]
+    this_cumulative = cumulative[index]
+
+    overshot_by = dist_along_skel - prev_cumulative
+    percent_interpolate = overshot_by / (this_cumulative - prev_cumulative)
+
+    return lerp(prev_vert, this_vert, percent_interpolate), lerp(prev_tangent, this_tangent, percent_interpolate)
