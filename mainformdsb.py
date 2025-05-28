@@ -25,6 +25,15 @@ class MainFormDsb(OrsAbstractWindow):
         self.ui = Ui_MainFormDsb()
         self.ui.setupUi(self)
         self.ui.ccb_dendrite_roi_chooser.setManagedClass([ORSModel.ROI])
+        self.ui.ccb_annotation_chooser.setManagedClass([ORSModel.Annotation])
+        self.ui.ccb_multiroi_chooser.setManagedClass([ORSModel.MultiROI])
+        self.ui.ccb_annotation_chooser.setEnabled(self.ui.chk_vis_annotations.isChecked())
+        self.ui.ccb_multiroi_chooser.setEnabled(self.ui.chk_vis_multiroi.isChecked())
+
+        # I have to set these manually for some reason
+        self.ui.chk_vis_annotations.stateChanged.connect(self.on_chk_vis_annotations_stateChanged)
+        self.ui.chk_vis_multiroi.stateChanged.connect(self.on_chk_vis_multiroi_stateChanged)
+
         self.ui.sldr_neck_point.setMaximum(1000)
         WorkingContext.registerOrsWidget('DSB_efd060071a1711f0b40cf83441a96bd5', implementation, 'MainFormDsb', self)
         self.mesh: Optional[trimesh.Trimesh] = None
@@ -51,6 +60,19 @@ class MainFormDsb(OrsAbstractWindow):
         self.ui.lbl_status.setText("Converting ROI to Mesh")
         self.mesh = meshhelper.roi_to_mesh(selected_roi)
 
+        selected_annotation = ORSModel.orsObj(self.ui.ccb_annotation_chooser.getSelectedGuid())
+
+        annotations = None
+        if selected_annotation is not None and self.ui.chk_vis_annotations.isChecked():
+            self.ui.lbl_status.setText("Saving Annotations")
+            annotations = meshhelper.annotations_to_list(selected_annotation)
+
+        selected_multiroi = ORSModel.orsObj(self.ui.ccb_multiroi_chooser.getSelectedGuid())
+        psds = None
+        if selected_multiroi is not None and self.ui.chk_vis_multiroi.isChecked():
+            self.ui.lbl_status.setText("Saving MultiROI")
+            psds = meshhelper.multiroi_to_mesh(selected_multiroi)
+
         self.ui.lbl_status.setText("Skeletonizing Mesh")
         skeleton = meshhelper.skeletonize_mesh(self.mesh)
 
@@ -58,7 +80,9 @@ class MainFormDsb(OrsAbstractWindow):
         payload.save(
             payload.Payload(
                 dendrite_mesh=self.mesh,
-                skeleton=skeleton
+                skeleton=skeleton,
+                annotations=annotations,
+                psds=psds
             ),
             filepath=filepath
         )
@@ -165,9 +189,17 @@ class MainFormDsb(OrsAbstractWindow):
         self.neck_point_slider_values = [0 for _ in range(len(self.spine_skeletons))]
 
         self.ui.vis_widget.show()
-        self.visualizer = vis.Visualizer(self.ui.vis_widget, pld.dendrite_mesh, self.spine_skeletons)
+        self.visualizer = vis.Visualizer(self.ui.vis_widget, pld.dendrite_mesh, self.spine_skeletons, pld.annotations, pld.psds)
         self.ui.vis_widget.reset_camera()
         self.jump_vis(0)
+
+    @pyqtSlot()
+    def on_chk_vis_annotations_stateChanged(self):
+        self.ui.ccb_annotation_chooser.setEnabled(self.ui.chk_vis_annotations.isChecked())
+
+    @pyqtSlot()
+    def on_chk_vis_multiroi_stateChanged(self):
+        self.ui.ccb_multiroi_chooser.setEnabled(self.ui.chk_vis_multiroi.isChecked())
 
     @pyqtSlot(int)
     def on_sldr_neck_point_valueChanged(self, value):

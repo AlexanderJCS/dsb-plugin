@@ -92,7 +92,14 @@ def axis_angle_from_normals(n_src, n_dst):
 
 
 class Visualizer:
-    def __init__(self, interactor: QtInteractor, mesh: trimesh.Trimesh, spine_polylines: np.ndarray):
+    def __init__(
+            self,
+            interactor: QtInteractor,
+            mesh: trimesh.Trimesh,
+            spine_polylines: np.ndarray,
+            annotations: typing.Optional[list[tuple[np.ndarray, str]]] = None,
+            psds: typing.Optional[trimesh.Trimesh] = None
+    ):
         self.plotter: QtInteractor = interactor
         self.mesh_actor = self.plotter.add_mesh(pv.wrap(mesh), opacity=0.3, color=(0.7, 0.7, 0.7))
 
@@ -103,6 +110,18 @@ class Visualizer:
             self.spine_polyline_actors.append(
                 line_actor(polyline, color=(1, 0, 0), connected=True)
             )
+
+        self.annotations_actor = self.plotter.add_point_labels(
+            np.array([pt for pt, _ in annotations]),
+            [label if label else "Unnamed" for _, label in annotations],
+            render_points_as_spheres=True,
+            point_size=10,
+            always_visible=True,
+            font_size=12,
+            point_color="Red"
+        ) if annotations is not None else None
+
+        self.psds_actor = self.plotter.add_mesh(pv.wrap(psds), color=(0.16, 0.16, 0.8)) if psds is not None else None
 
         self.spine_point_actors: list[typing.Optional[pv.Actor]] = [None for _ in range(len(spine_polylines))]
 

@@ -3,9 +3,22 @@ import skeletor as sk
 import trimesh
 
 from ORSModel.ors import ROI, FaceVertexMesh
+import ORSModel
 
 
-def roi_to_mesh(roi: ROI):
+def ors_to_trimesh(ors_mesh: FaceVertexMesh) -> trimesh.Trimesh:
+    """
+    Converts a Dragonfly ORS mesh to a trimesh mesh.
+    :param ors_mesh: The ORS mesh to convert
+    :return: The trimesh mesh
+    """
+    vertices = ors_mesh.getVertices(0).getNDArray().reshape(-1, 3) * 1e9  # Convert from m to nm
+    edges = ors_mesh.getEdges(0).getNDArray().reshape(-1, 3)
+
+    return trimesh.Trimesh(vertices=vertices, faces=edges)
+
+
+def roi_to_mesh(roi: ROI, cubic=False, smooth=True):
     """
     Does all the preprocessing required to convert a Dragonfly ROI to a trimesh mesh with smoothing applied.
     :return: The Trimesh mesh
@@ -13,36 +26,35 @@ def roi_to_mesh(roi: ROI):
 
     # progress = Progress()
     # progress.startWorkingProgressWithCaption("Converting to mesh", False)
-    dragonfly_mesh = roi.getAsMarchingCubesMesh(
-        isovalue=0.5,
-        bSnapToContour=False,
-        flipNormal=False,
-        timeStep=0,
-        xSample=10,  # For anisotropic datasets xSample and ySample are larger than zSample
-        ySample=10,  # TODO: remove hard-coding
-        zSample=2,
-        pNearest=False,
-        pWorld=True,
-        IProgress=None,
-        pMesh=None
-    )
+    if not cubic:
+        dragonfly_mesh = roi.getAsMarchingCubesMesh(
+            isovalue=0.5,
+            bSnapToContour=False,
+            flipNormal=False,
+            timeStep=0,
+            xSample=10,  # For anisotropic datasets xSample and ySample are larger than zSample
+            ySample=10,  # TODO: remove hard-coding
+            zSample=2,
+            pNearest=False,
+            pWorld=True,
+            IProgress=None,
+            pMesh=None
+        )
+    else:
+        dragonfly_mesh = roi.getAsCubicMesh(True, None, None)
 
     if 0 in (dragonfly_mesh.getVertexCount(0), dragonfly_mesh.getEdgeCount(0)):
         # TODO: handle this edge case better
         return trimesh.Trimesh()
 
     # Smooth the mesh
-    dragonfly_mesh.laplacianSmooth(2, 0, 0.3)
+    if smooth:
+        dragonfly_mesh.laplacianSmooth(2, 0, 0.3)
 
-    # Convert to trimesh
-    vertices = dragonfly_mesh.getVertices(0).getNDArray() * 1e9  # Convert from m to nm
-    vertices = vertices.reshape(-1, 3)  # [[x1, y1, z1], [x2, y2, z2], ...]
-    edges = dragonfly_mesh.getEdges(0).getNDArray()
-    faces = edges.reshape(-1, 3)
-
+    mesh = ors_to_trimesh(dragonfly_mesh)
     dragonfly_mesh.deleteObjectAndAllItsChildren()
 
-    return trimesh.Trimesh(vertices=vertices, faces=faces)
+    return mesh
 
 
 def mesh_to_ors(mesh: trimesh.Trimesh) -> FaceVertexMesh:
@@ -76,6 +88,42 @@ def mesh_to_ors(mesh: trimesh.Trimesh) -> FaceVertexMesh:
         ors_indices.atPut(i, np_indices[i])
 
     return ors_mesh
+
+
+def vector3_to_np(vector3: ORSModel.Vector3) -> np.array:
+    return np.array([vector3.getX(), vector3.getY(), vector3.getZ()], dtype=np.float64)
+
+
+def annotations_to_list(annotations: ORSModel.Annotation) -> list[tuple[np.array, str]]:
+    control_points = annotations.getControlPointCount(0)
+
+    output = []
+    for i in range(control_points):
+        output.append((
+            vector3_to_np(annotations.getControlPointPositionAtIndex(i, 0, None)) * 1e9,
+            annotations.getControlPointCaptionAtIndex(i, 0)
+        ))
+
+    return output
+
+
+def multiroi_to_mesh(multiroi: ORSModel.MultiROI) -> trimesh.Trimesh:
+    """
+    Converts a Dragonfly MultiROI to a trimesh mesh.
+    :param multiroi: The MultiROI to convert
+    :return: The trimesh mesh
+    """
+
+    meshes = []
+
+    for label in range(1, multiroi.getLabelCount() + 1):
+        copy_roi: ORSModel.ors.ROI = ORSModel.ors.ROI()
+        copy_roi.copyShapeFromStructuredGrid(multiroi)
+        multiroi.addToVolumeROI(copy_roi, label)
+
+        meshes.append(roi_to_mesh(copy_roi, True, False))
+
+    return trimesh.util.concatenate(meshes, trimesh.Trimesh())
 
 
 def skeletonize_mesh(mesh: trimesh.Trimesh) -> sk.Skeleton:
