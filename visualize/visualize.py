@@ -209,7 +209,8 @@ class Visualizer:
             render_points_as_spheres=True,
             point_size=10,
         )
-        self.plotter.render()  # force an update
+        self.active_actors.append(self.spine_point_actors[idx])
+        self.plotter.render()
 
     def vis_spine_idx(self, idx: int) -> None:
         for actor in self.active_actors:
