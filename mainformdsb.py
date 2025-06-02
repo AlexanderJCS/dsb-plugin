@@ -4,7 +4,7 @@ from typing import Optional
 
 import ORSModel
 import numpy as np
-import pyvista
+from scipy.spatial import KDTree
 import trimesh
 from OrsLibraries.workingcontext import WorkingContext
 from ORSServiceClass.windowclasses.orsabstractwindow import OrsAbstractWindow
@@ -40,6 +40,8 @@ class MainFormDsb(OrsAbstractWindow):
         self.visualizer = None
         self.spine_skeletons = None
         self.neck_point_slider_values = []
+        self.annotations_kdtree: Optional[KDTree] = None
+        self.annotations = []
 
     @pyqtSlot()
     def on_btn_preprocessing_run_clicked(self):
@@ -184,9 +186,14 @@ class MainFormDsb(OrsAbstractWindow):
         pld = payload.load(filepath)
         self.mesh = pld.dendrite_mesh
         self.spine_skeletons, radii = polyline_utils.get_branch_polylines_by_length(
-            pld.skeleton, min_length=0, max_length=50000, min_nodes=15, max_nodes=5000, radius_threshold=math.inf
+            pld.skeleton, min_length=0, max_length=10000, min_nodes=15, max_nodes=5000, radius_threshold=math.inf
         )
         self.neck_point_slider_values = [0 for _ in range(len(self.spine_skeletons))]
+
+        self.annotations = pld.annotations if pld.annotations is not None else []
+
+        if self.annotations:
+            self.annotations_kdtree = KDTree([point for point, _ in self.annotations])
 
         self.ui.vis_widget.show()
         self.visualizer = vis.Visualizer(self.ui.vis_widget, pld.dendrite_mesh, self.spine_skeletons, pld.annotations, pld.psds)
@@ -200,6 +207,16 @@ class MainFormDsb(OrsAbstractWindow):
     @pyqtSlot()
     def on_chk_vis_multiroi_stateChanged(self):
         self.ui.ccb_multiroi_chooser.setEnabled(self.ui.chk_vis_multiroi.isChecked())
+
+    def change_name(self, neck_point) -> Optional[str]:
+        if self.annotations_kdtree is None:
+            return None
+
+        dist, idx = self.annotations_kdtree.query(neck_point, k=1)
+        if dist > 5000:
+            return None
+
+        return self.annotations[idx][1] if idx < len(self.annotations) else None
 
     @pyqtSlot(int)
     def on_sldr_neck_point_valueChanged(self, value):
@@ -224,6 +241,12 @@ class MainFormDsb(OrsAbstractWindow):
         self.neck_point_slider_values[current_idx] = value
         self.visualizer.set_spine_point(current_idx, neck_pt_3d)
 
+        new_name = self.change_name(neck_pt_3d)
+        if new_name is not None:
+            self.ui.line_head_name.setText(f"Spine Head: {new_name}")
+        else:
+            self.ui.line_head_name.setText(f"Spine Head: {current_idx + 1}")
+
     @pyqtSlot()
     def on_btn_save_head_clicked(self):
         current_idx = self.visualizer.currently_visualizing
@@ -238,9 +261,7 @@ class MainFormDsb(OrsAbstractWindow):
         spine_len = accumulated[-1]
         slider_max = self.ui.sldr_neck_point.maximum()
         neck_pt_1d = spine_len * (slider_max - self.neck_point_slider_values[current_idx]) / slider_max
-        neck_pt_3d, tangent = geom.point_and_tangent_along_polyline(
-            self.spine_skeletons[current_idx], neck_pt_1d
-        )
+        neck_pt_3d, tangent = geom.point_and_tangent_along_polyline(self.spine_skeletons[current_idx], neck_pt_1d)
 
         beheaded = self.mesh.slice_plane(neck_pt_3d, -tangent, cap=True)
 
@@ -259,9 +280,9 @@ class MainFormDsb(OrsAbstractWindow):
             return
 
         ors_mesh = meshhelper.mesh_to_ors(mesh=closest_component)
-        ors_mesh.setTitle(f"Spine Head no. {current_idx + 1}")
+        ors_mesh.setTitle(f"Spine Head {self.ui.line_head_name.text()}")
         ors_mesh.publish()
-        self.ui.lbl_status.setText(f"Spine Head no. {current_idx + 1} Created")
+        self.ui.lbl_status.setText(f"Saved: Spine Head {self.ui.line_head_name.text()}")
 
     @pyqtSlot()
     def closeEvent(self, event):

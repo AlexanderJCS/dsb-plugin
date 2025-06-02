@@ -32,7 +32,7 @@
       <enum>QTabWidget::Rounded</enum>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <property name="elideMode">
       <enum>Qt::ElideNone</enum>
@@ -185,7 +185,7 @@
       <attribute name="title">
        <string>Beheading</string>
       </attribute>
-      <layout class="QVBoxLayout" name="main_vertical_layout" stretch="0,1,0,0,0">
+      <layout class="QVBoxLayout" name="main_vertical_layout" stretch="0,1,0,0,0,0">
        <item>
         <widget class="QPushButton" name="btn_select_preprocessing_file">
          <property name="minimumSize">
@@ -233,6 +233,20 @@
           <enum>Qt::Horizontal</enum>
          </property>
         </widget>
+       </item>
+       <item>
+        <layout class="QFormLayout" name="formLayout_2">
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_2">
+           <property name="text">
+            <string>Head Name:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLineEdit" name="line_head_name"/>
+         </item>
+        </layout>
        </item>
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout">

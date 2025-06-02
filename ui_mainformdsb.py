@@ -110,6 +110,15 @@ class Ui_MainFormDsb(object):
         self.sldr_neck_point.setOrientation(QtCore.Qt.Orientation.Horizontal)
         self.sldr_neck_point.setObjectName("sldr_neck_point")
         self.main_vertical_layout.addWidget(self.sldr_neck_point)
+        self.formLayout_2 = QtWidgets.QFormLayout()
+        self.formLayout_2.setObjectName("formLayout_2")
+        self.label_2 = QtWidgets.QLabel(self.beheading)
+        self.label_2.setObjectName("label_2")
+        self.formLayout_2.setWidget(0, QtWidgets.QFormLayout.ItemRole.LabelRole, self.label_2)
+        self.line_head_name = QtWidgets.QLineEdit(self.beheading)
+        self.line_head_name.setObjectName("line_head_name")
+        self.formLayout_2.setWidget(0, QtWidgets.QFormLayout.ItemRole.FieldRole, self.line_head_name)
+        self.main_vertical_layout.addLayout(self.formLayout_2)
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
         self.btn_save_head = QtWidgets.QPushButton(self.beheading)
@@ -126,7 +135,7 @@ class Ui_MainFormDsb(object):
         self.verticalLayout.addWidget(self.lbl_status)
 
         self.retranslateUi(MainFormDsb)
-        self.tabWidget.setCurrentIndex(0)
+        self.tabWidget.setCurrentIndex(1)
         QtCore.QMetaObject.connectSlotsByName(MainFormDsb)
 
     def retranslateUi(self, MainFormDsb):
@@ -141,6 +150,7 @@ class Ui_MainFormDsb(object):
         self.btn_select_preprocessing_file.setText(_translate("MainFormDsb", "Select Preprocessing File"))
         self.btn_prev_spine.setText(_translate("MainFormDsb", "Previous Spine"))
         self.btn_next_spine.setText(_translate("MainFormDsb", "Next Spine"))
+        self.label_2.setText(_translate("MainFormDsb", "Head Name:"))
         self.btn_save_head.setText(_translate("MainFormDsb", "Save Head"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.beheading), _translate("MainFormDsb", "Beheading"))
 from ORSServiceClass.ORSWidget.orsobjectclasscombobox.orsobjectclasscombobox import OrsObjectClassComboBox
