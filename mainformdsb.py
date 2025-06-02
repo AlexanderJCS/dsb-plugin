@@ -159,7 +159,9 @@ class MainFormDsb(OrsAbstractWindow):
 
         vis_current = self.visualizer.currently_visualizing
         vis_next = (vis_current + n) if vis_current is not None else 0
-        vis_next %= len(self.visualizer.spine_polyline_actors)
+        if vis_next >= len(self.spine_skeletons) or vis_next < 0:
+            self.ui.lbl_status.setText("No more spines to visualize")
+            return
 
         if not self.visualizer.has_spine_point(vis_next):
             # Compute the neck point and tangent for the next spine
