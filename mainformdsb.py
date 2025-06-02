@@ -11,12 +11,12 @@ from ORSServiceClass.windowclasses.orsabstractwindow import OrsAbstractWindow
 from PyQt6.QtCore import pyqtSlot
 from PyQt6.QtWidgets import QFileDialog
 
-from pipeline.beheading import skel_helper, spine_analysis, polyline_utils
-from pipeline.preprocessing import meshhelper
-from pipeline.beheading import geometry as geom
-from pipeline import payload
+from .pipeline.beheading import skel_helper, spine_analysis, polyline_utils
+from .pipeline.preprocessing import meshhelper
+from .pipeline.beheading import geometry as geom
+from .pipeline import payload
 from .ui_mainformdsb import Ui_MainFormDsb
-from visualize import visualize as vis
+from .visualize import visualize as vis
 
 
 class MainFormDsb(OrsAbstractWindow):
