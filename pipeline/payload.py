@@ -3,6 +3,7 @@ from dataclasses import dataclass
 
 import zipfile
 import io
+import os
 
 import numpy as np
 import skeletor as sk
@@ -19,7 +20,7 @@ class Payload:
     psds: Optional[trimesh.Trimesh | None]
 
 
-def save(pld: Payload, filepath: str) -> None:
+def pld_save(pld: Payload, filepath: str) -> None:
     """
     Save the payload to a file.
     :param pld: The payload to save
@@ -38,7 +39,7 @@ def save(pld: Payload, filepath: str) -> None:
         zf.writestr("psds.stl", psds_stl_bytes)
 
 
-def load(filepath: str) -> Payload:
+def pld_load(filepath: str) -> Payload:
     """
     Load the payload from a file.
     :param filepath: The path to load the payload from
@@ -60,3 +61,29 @@ def load(filepath: str) -> Payload:
                    skeleton=spine_skeletons,
                    annotations=annotations,
                    psds=psds)
+
+
+def csv_save(filepath: str, head_name: str, head_idx: int, head_vol: float) -> bool:
+    """
+    Save the head information to a CSV file.
+    :param filepath: The path to save the CSV file to
+    :param head_name: The head name of the dendritic spine head
+    :param head_idx: The index of the dendritic spine head
+    :param head_vol: The volume of the dendritic spine head in μm³
+    :return: True if saved successfully, False otherwise
+    """
+
+    try:
+        # First check if the file exists, and if it doesn't, create it with the appropriate header
+        if not os.path.isfile(filepath):
+            os.makedirs(os.path.dirname(filepath), exist_ok=True)
+            with open(filepath, "w", encoding="utf-8-sig") as f:
+                f.write("Head Index,Head Name,Head Volume (μm³)\n")
+
+        # Now append the new head information to the CSV file
+        with open(filepath, "a", encoding="utf-8-sig") as f:
+            f.write(f"{head_idx},{head_name},{head_vol}\n")
+    except (FileNotFoundError, PermissionError, IsADirectoryError, NotADirectoryError, OSError):
+        return False
+
+    return True

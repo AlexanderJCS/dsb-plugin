@@ -79,7 +79,7 @@ class MainFormDsb(OrsAbstractWindow):
         skeleton = meshhelper.skeletonize_mesh(self.mesh)
 
         self.ui.lbl_status.setText("Saving...")
-        payload.save(
+        payload.pld_save(
             payload.Payload(
                 dendrite_mesh=self.mesh,
                 skeleton=skeleton,
@@ -89,6 +89,21 @@ class MainFormDsb(OrsAbstractWindow):
             filepath=filepath
         )
         self.ui.lbl_status.setText("Saved!")
+
+    @pyqtSlot()
+    def on_btn_select_csv_output_clicked(self):
+        filepath, _ = QFileDialog.getSaveFileName(
+            None,
+            "Select Output CSV Location",
+            "",
+            "CSV File (*.csv)"
+        )
+
+        if filepath:
+            self.ui.line_csv_output.setText(filepath)
+        else:
+            self.ui.lbl_status.setText("No file selected")
+            return
 
     @pyqtSlot()
     def on_btn_preprocessing_output_clicked(self):
@@ -183,7 +198,7 @@ class MainFormDsb(OrsAbstractWindow):
             self.ui.lbl_status.setText("No file selected")
             return
 
-        pld = payload.load(filepath)
+        pld = payload.pld_load(filepath)
         self.mesh = pld.dendrite_mesh
         self.spine_skeletons, radii = polyline_utils.get_branch_polylines_by_length(
             pld.skeleton, min_length=0, max_length=10000, min_nodes=15, max_nodes=5000, radius_threshold=math.inf
@@ -213,7 +228,7 @@ class MainFormDsb(OrsAbstractWindow):
             return None
 
         dist, idx = self.annotations_kdtree.query(neck_point, k=1)
-        if dist > 5000:
+        if dist > 4000:
             return None
 
         return self.annotations[idx][1] if idx < len(self.annotations) else None
@@ -243,9 +258,9 @@ class MainFormDsb(OrsAbstractWindow):
 
         new_name = self.change_name(neck_pt_3d)
         if new_name is not None:
-            self.ui.line_head_name.setText(f"Spine Head: {new_name}")
+            self.ui.line_head_name.setText(f"{new_name}")
         else:
-            self.ui.line_head_name.setText(f"Spine Head: {current_idx + 1}")
+            self.ui.line_head_name.setText(f"{current_idx + 1}")
 
     @pyqtSlot()
     def on_btn_save_head_clicked(self):
@@ -280,9 +295,14 @@ class MainFormDsb(OrsAbstractWindow):
             return
 
         ors_mesh = meshhelper.mesh_to_ors(mesh=closest_component)
-        ors_mesh.setTitle(f"Spine Head {self.ui.line_head_name.text()}")
+        head_name = self.ui.line_head_name.text()
+        ors_mesh.setTitle(f"Spine Head {head_name}")
         ors_mesh.publish()
-        self.ui.lbl_status.setText(f"Saved: Spine Head {self.ui.line_head_name.text()}")
+        self.ui.lbl_status.setText(f"Saved: Spine Head {head_name}")
+
+        if filepath := self.ui.line_csv_output.text():
+            vol = closest_component.volume / 1e9  # Convert from nm³ to μm³
+            payload.csv_save(filepath, head_name, current_idx + 1, vol)
 
     @pyqtSlot()
     def closeEvent(self, event):
