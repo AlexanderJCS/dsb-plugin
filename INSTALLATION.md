@@ -1,8 +1,10 @@
 # Installation
 
+This guide is written for the Windows operating system. Linux users will need to install manually.
+
 Ensure that Dragonfly 2024.1 is installed. Close all Dragonfly windows.
 
-> 💡 **Note:** If you are installing plugin with a  version of Dragonfly different from 2024.1: (1) the plugin is not guaranteed to work correctly; (2) the plugin must be installed manually or the `DRAGONFLY_INSTALL_PATH` variable must be updated accordingly in the installation script.
+> 💡 **Note:** If you are installing the plugin with a  version of Dragonfly different from 2024.1: (1) the plugin is not guaranteed to work correctly; (2) the plugin must be installed manually or the `DRAGONFLY_INSTALL_PATH` variable must be updated accordingly in the installation script.
 
 ## Downloading the Latest Release
 
@@ -22,4 +24,4 @@ Open Dragonfly. On the application toolbar (top of the screen), you should see a
 
 > 🔧 **Troubleshooting:** If the **Plugins → Start DSB** button is not available, the most likely culprit is that the files were not copied properly. Check that you see a folder starting with **DSB** at `C:\ProgramData\ORS\Dragonfly2024.1\pythonAllUsersExtensions\Plugins`. Try re-running the installation script, and if that does not work, install the plugin manually.
 
-> 🔧 **Troubleshooting:** If the **Plugins → Start DSB** does not show a new window, it is likely that DSB's dependencies are not installed properly. Try re-running the installation script and check for errors in the console relating to package installation (warnings are fine).
+> 🔧 **Troubleshooting:** If the **Plugins → Start DSB** fails to launch a plugin window, DSB's dependencies are likely not installed properly. Try re-running the installation script and check for errors in the console relating to package installation (warnings are fine).

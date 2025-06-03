@@ -8,7 +8,7 @@ The workflow for this plugin is split into two general steps: preprocessing and 
 
 ## Preprocessing
 
-The preprocessing step collects the raw data and organizes in a way that is quick and efficient to process. To access the preprocessing page, select the **Preprocessing** tab on the top of the DSB window.
+The preprocessing step collects the raw data and organizes it in a way that is quick and efficient to process. To access the preprocessing page, select the **Preprocessing** tab on the top of the DSB window.
 
 ![Image of the preprocessing tab](images/preprocessing.png)
 
@@ -36,7 +36,7 @@ To access the beheading page, click the **Beheading** tab on the top of the DSB 
 
 **Optional Step:** When beheading, it may be helpful to have the spine head ID, spine head name, and spine head volume in one CSV. You may choose an output CSV file location by clicking the **Select CSV Output** button. Any spines beheaded will appear in the CSV.
 
-> ✅ **Tip:** You may append to a CSV by selecting an already-existing one. This is useful for making modifications, proofreading, collaborating, etc. *You may get a overwrite warning when selecting the existing CSV, but it can be safely ignored*.
+> ✅ **Tip:** You may append to a CSV by selecting an already-existing one. This is useful for making modifications, proofreading, collaborating, etc. *You may get an overwrite warning when selecting the existing CSV, but it can be safely ignored*.
 
 ### Loading a Preprocessing File
 
@@ -56,9 +56,11 @@ Once the preprocessing file populates, you will (hopefully) notice a line going 
 
 If you disagree with the output of DSB, you may adjust the slider under the visualization window, which changes the beheading point. The cut direction is computed automatically from the spine skeleton.
 
-Once complete, verify the spine head name is correct by checking the **Head Name** field near the bottom. 
+Once the cut position is set, verify the spine head name is correct by checking the **Head Name** field near the bottom. 
 
 > ✅ **Tip:** If you selected an annotation in the preprocessing step, the dendritic spine head name will be the name of the closest annotation.
+
+> ⚠️ **Warning:** The head name will reset to the suggested head name if the beheading point is moved. Make sure you check the name only after the cut position is finalized.
 
 Finally, click the **Save Head** button. A mesh is then output in Dragonfly and, if a CSV is specified, a new row in the CSV.
 
