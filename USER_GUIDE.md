@@ -14,9 +14,9 @@ The preprocessing step collects the raw data and organizes it in a way that is q
 
 You may provide:
 
-* **(Required)** An ROI (voxel segmentation) of the dendrite and dendritic spines *combined*. Note you may need to union the dendrite ROI and spines ROI if they are separate.
-* **(Optional)** Annotations to display in the beheading step. It also allows DSB to infer the dendrite names when exporting the spine heads (in the beheading step).
-* **(Optional)** A MultiROI to visualize alongside the dendrite mesh. Useful for visualizing postsynaptic densities (PSDs) to help one better understand where the synapse is.
+* **(Required)** A Dragonfly ROI (voxel segmentation) of the dendrite and dendritic spines *combined*. Note you may need to union the dendrite ROI and spines ROI if they are separate.
+* **(Optional)** A Dragonfly Annotations to display in the beheading step. It also allows DSB to infer the dendrite names when exporting the spine heads (in the beheading step).
+* **(Optional)** A Dragonfly MultiROI to visualize alongside the dendrite mesh. Useful for visualizing postsynaptic densities (PSDs) to help one better understand where the synapse is.
 
 > ✅ **Tip:** Click the checkbox next to the optional items to enable them, then you may select the annotation/MultiROI.
 
