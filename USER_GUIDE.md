@@ -10,6 +10,8 @@ The workflow for this plugin is split into two general steps: preprocessing and 
 
 The preprocessing step collects the raw data and organizes in a way that is quick and efficient to process. To access the preprocessing page, select the **Preprocessing** tab on the top of the DSB window.
 
+![Image of the preprocessing tab](images/preprocessing.png)
+
 You may provide:
 
 * **(Required)** An ROI (voxel segmentation) of the dendrite and dendritic spines *combined*. Note you may need to union the dendrite ROI and spines ROI if they are separate.
@@ -28,6 +30,8 @@ Once you specify the dendrite + spines and optionally annotations or MultiROI, c
 
 To access the beheading page, click the **Beheading** tab on the top of the DSB window.
 
+![Beheading Tab](images/beheading_tab.png)
+
 ### Selecting an Output CSV File
 
 **Optional Step:** When beheading, it may be helpful to have the spine head ID, spine head name, and spine head volume in one CSV. You may choose an output CSV file location by clicking the **Select CSV Output** button. Any spines beheaded will appear in the CSV.
@@ -41,6 +45,8 @@ Loading a preprocessing file is simple: click **Select Preprocessing File** and 
 After the preprocessing file is selected, you should see the visualization window populate.
 
 > 🐞 **Known Issue:** The visualization window may look incorrectly scaled immediately after loading data, which can be fixed by resizing the DSB window by at least 1 pixel. If the visualization window is completely black, restart DSB and start the beheading instructions again.
+
+![Visualization](images/visualization.png)
 
 ### Actually Beheading!
 
@@ -57,3 +63,5 @@ Once complete, verify the spine head name is correct by checking the **Head Name
 Finally, click the **Save Head** button. A mesh is then output in Dragonfly and, if a CSV is specified, a new row in the CSV.
 
 > ⚠️ **Warning:** Ensure that the CSV not open in Excel, Notepad, etc. since that will interfere with DSB writing to the file.
+
+![The mesh output in the object tab](images/output.png)
