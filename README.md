@@ -15,9 +15,8 @@ A Dragonfly 3D World plugin written at the Max Planck Florida Institute for Neur
 
 ## Installation
 
-Installation instructions to be written.
+Please view the [installation guide](INSTALLATION.md)
 
 ## User Guide
 
-User guide to be written.
-
+Please view the [user guide](USER_GUIDE.md)
