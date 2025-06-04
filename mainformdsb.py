@@ -12,6 +12,7 @@ from ORSServiceClass.windowclasses.orsabstractwindow import OrsAbstractWindow
 from PyQt6.QtCore import pyqtSlot
 from PyQt6.QtWidgets import QFileDialog
 
+from pipeline.preprocessing.preprocessingworker import PreprocessingWorker
 from .pipeline.beheading import skel_helper, spine_analysis, polyline_utils
 from .pipeline.preprocessing import meshhelper
 from .pipeline.beheading import geometry as geom
@@ -45,6 +46,10 @@ class MainFormDsb(OrsAbstractWindow):
         self.annotations = []
         self.neck_pt_3d: Optional[np.ndarray] = None
         self.neck_pt_tangent: Optional[np.ndarray] = None
+        self.worker: Optional[PreprocessingWorker] = None
+
+    def update_status_label(self, text: str):
+        self.ui.lbl_status.setText(text)
 
     @pyqtSlot()
     def on_btn_preprocessing_run_clicked(self):
@@ -62,36 +67,17 @@ class MainFormDsb(OrsAbstractWindow):
             self.ui.lbl_status.setText("Output path is invalid")
             return
 
-        self.ui.lbl_status.setText("Converting ROI to Mesh")
-        self.mesh = meshhelper.roi_to_mesh(selected_roi)
-
-        selected_annotation = ORSModel.orsObj(self.ui.ccb_annotation_chooser.getSelectedGuid())
-
-        annotations = None
-        if selected_annotation is not None and self.ui.chk_vis_annotations.isChecked():
-            self.ui.lbl_status.setText("Saving Annotations")
-            annotations = meshhelper.annotations_to_list(selected_annotation)
-
-        selected_multiroi = ORSModel.orsObj(self.ui.ccb_multiroi_chooser.getSelectedGuid())
-        psds = None
-        if selected_multiroi is not None and self.ui.chk_vis_multiroi.isChecked():
-            self.ui.lbl_status.setText("Saving MultiROI")
-            psds = meshhelper.multiroi_to_mesh(selected_multiroi)
-
-        self.ui.lbl_status.setText("Skeletonizing Mesh")
-        skeleton = meshhelper.skeletonize_mesh(self.mesh)
-
-        self.ui.lbl_status.setText("Saving...")
-        payload.pld_save(
-            payload.Payload(
-                dendrite_mesh=self.mesh,
-                skeleton=skeleton,
-                annotations=annotations,
-                psds=psds
-            ),
-            filepath=filepath
+        self.worker = PreprocessingWorker(
+            filepath, selected_roi,
+            ORSModel.orsObj(self.ui.ccb_multiroi_chooser.getSelectedGuid()) if self.ui.chk_vis_multiroi.isChecked() else None,
+            ORSModel.orsObj(self.ui.ccb_annotation_chooser.getSelectedGuid()) if self.ui.chk_vis_annotations.isChecked() else None
         )
-        self.ui.lbl_status.setText("Saved!")
+
+        self.worker.update_label.connect(self.update_status_label)
+        self.worker.finished.connect(lambda: self.ui.btn_preprocessing_run.setEnabled(True))
+
+        self.worker.start()
+        self.ui.btn_preprocessing_run.setEnabled(False)  # Disable it until the worker is done
 
     @pyqtSlot()
     def on_btn_select_csv_output_clicked(self):

@@ -2,7 +2,7 @@ import numpy as np
 import skeletor as sk
 import trimesh
 
-from ORSModel.ors import ROI, FaceVertexMesh
+from ORSModel.ors import ROI, FaceVertexMesh, Progress
 import ORSModel
 
 
@@ -24,17 +24,28 @@ def roi_to_mesh(roi: ROI, cubic=False, smooth=True):
     :return: The Trimesh mesh
     """
 
-    # progress = Progress()
-    # progress.startWorkingProgressWithCaption("Converting to mesh", False)
     if not cubic:
+        scale_x = roi.getXSpacing()
+        scale_y = roi.getYSpacing()
+        scale_z = roi.getZSpacing()
+
+        # Aim to have zSample = 2 and adjust xSample and ySample accordingly
+        z_sample = 2
+        x_sample = int(round(scale_z / scale_x * z_sample))
+        y_sample = int(round(scale_z / scale_y * z_sample))
+
+        # Clamp x_sample and y_sample to [2, 10] for performance reasons
+        x_sample = max(2, min(x_sample, 10))
+        y_sample = max(2, min(y_sample, 10))
+
         dragonfly_mesh = roi.getAsMarchingCubesMesh(
             isovalue=0.5,
             bSnapToContour=False,
             flipNormal=False,
             timeStep=0,
-            xSample=10,  # For anisotropic datasets xSample and ySample are larger than zSample
-            ySample=10,  # TODO: remove hard-coding
-            zSample=2,
+            xSample=x_sample,
+            ySample=y_sample,
+            zSample=z_sample,
             pNearest=False,
             pWorld=True,
             IProgress=None,
