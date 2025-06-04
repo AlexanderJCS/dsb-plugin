@@ -3,6 +3,7 @@ import os
 from typing import Optional
 
 import ORSModel
+from OrsHelpers.viewLayoutHelper import DisplayLayoutHelper
 import numpy as np
 from scipy.spatial import KDTree
 import trimesh
@@ -42,6 +43,8 @@ class MainFormDsb(OrsAbstractWindow):
         self.neck_point_slider_values = []
         self.annotations_kdtree: Optional[KDTree] = None
         self.annotations = []
+        self.neck_pt_3d: Optional[np.ndarray] = None
+        self.neck_pt_tangent: Optional[np.ndarray] = None
 
     @pyqtSlot()
     def on_btn_preprocessing_run_clicked(self):
@@ -165,19 +168,20 @@ class MainFormDsb(OrsAbstractWindow):
 
         if not self.visualizer.has_spine_point(vis_next):
             # Compute the neck point and tangent for the next spine
-            neck_pt, tangent, neck_pt_1d = self.compute_neck_point_and_tangent(vis_next)
+            self.neck_pt_3d, self.neck_pt_tangent, neck_pt_1d = self.compute_neck_point_and_tangent(vis_next)
 
             accumulated = geom.accumulate(self.spine_skeletons[vis_next])
             self.neck_point_slider_values[vis_next] = int((accumulated[-1] - neck_pt_1d) / accumulated[-1] * self.ui.sldr_neck_point.maximum())
 
-            if neck_pt is None or tangent is None:
+            if self.neck_pt_3d is None or self.neck_pt_tangent is None:
                 self.ui.lbl_status.setText("Failed to compute neck point and tangent")
                 return
 
-            self.visualizer.set_spine_point(vis_next, neck_pt)
+            self.visualizer.set_spine_point(vis_next, self.neck_pt_3d)
 
         self.visualizer.vis_spine_idx(vis_next)
         self.ui.sldr_neck_point.setValue(self.neck_point_slider_values[vis_next])
+        self.ui.lbl_spine_idx.setText(f"Spine {vis_next + 1} / {len(self.spine_skeletons)}")
 
     @pyqtSlot()
     def on_btn_prev_spine_clicked(self):
@@ -243,22 +247,23 @@ class MainFormDsb(OrsAbstractWindow):
             or current_idx is None
             or current_idx >= len(self.neck_point_slider_values)
         ):
+            self.ui.lbl_status.setText("No spine selected")
             return
 
         accumulated = geom.accumulate(self.spine_skeletons[current_idx])
         spine_len = accumulated[-1]
         slider_max = self.ui.sldr_neck_point.maximum()
         neck_pt_1d = spine_len * (slider_max - value) / slider_max
-        neck_pt_3d, tangent = geom.point_and_tangent_along_polyline(
+        self.neck_pt_3d, self.neck_pt_tangent = geom.point_and_tangent_along_polyline(
             self.spine_skeletons[current_idx], neck_pt_1d
         )
 
-        self.visualizer.transform_plane(neck_pt_3d, tangent)
+        self.visualizer.transform_plane(self.neck_pt_3d, self.neck_pt_tangent)
 
         self.neck_point_slider_values[current_idx] = value
-        self.visualizer.set_spine_point(current_idx, neck_pt_3d)
+        self.visualizer.set_spine_point(current_idx, self.neck_pt_3d)
 
-        new_name = self.change_name(neck_pt_3d)
+        new_name = self.change_name(self.neck_pt_3d)
         if new_name is not None:
             self.ui.line_head_name.setText(f"{new_name}")
         else:
@@ -272,21 +277,20 @@ class MainFormDsb(OrsAbstractWindow):
                 or current_idx is None
                 or current_idx >= len(self.neck_point_slider_values)
         ):
+            self.ui.lbl_status.setText("No spine selected")
             return
 
-        accumulated = geom.accumulate(self.spine_skeletons[current_idx])
-        spine_len = accumulated[-1]
-        slider_max = self.ui.sldr_neck_point.maximum()
-        neck_pt_1d = spine_len * (slider_max - self.neck_point_slider_values[current_idx]) / slider_max
-        neck_pt_3d, tangent = geom.point_and_tangent_along_polyline(self.spine_skeletons[current_idx], neck_pt_1d)
+        if self.neck_pt_3d is None or self.neck_pt_tangent is None:
+            self.ui.lbl_status.setText("No neck point computed")
+            return
 
-        beheaded = self.mesh.slice_plane(neck_pt_3d, -tangent, cap=True)
+        beheaded = self.mesh.slice_plane(self.neck_pt_3d, -self.neck_pt_tangent, cap=True)
 
         closest_component: Optional[trimesh.Trimesh] = None
         closest_component_dist = np.inf
 
         for component in beheaded.split(only_watertight=False):
-            dist = trimesh.proximity.closest_point(component, [neck_pt_3d])[1][0]
+            dist = trimesh.proximity.closest_point(component, [self.neck_pt_3d])[1][0]
 
             if dist < closest_component_dist:
                 closest_component = component
@@ -305,6 +309,21 @@ class MainFormDsb(OrsAbstractWindow):
         if filepath := self.ui.line_csv_output.text():
             vol = closest_component.volume / 1e9  # Convert from nm³ to μm³
             payload.csv_save(filepath, head_name, current_idx + 1, vol)
+
+    @pyqtSlot()
+    def on_btn_go_to_spine_clicked(self):
+        if self.neck_pt_3d is None:
+            self.ui.lbl_status.setText("No neck point computed")
+            return
+
+        view = WorkingContext.getCurrentView(None)
+        if view is None:
+            self.ui.lbl_status.setText("No current view found")
+            return
+
+        ors_vec = ORSModel.ors.Vector3()
+        ors_vec.setXYZ(*(self.neck_pt_3d / 1e9))  # Convert from nm to m
+        DisplayLayoutHelper.moveAllLayoutOfViewToIncludePoint(view, ors_vec, True, False)
 
     @pyqtSlot()
     def closeEvent(self, event):
