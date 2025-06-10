@@ -12,7 +12,7 @@ from ORSServiceClass.windowclasses.orsabstractwindow import OrsAbstractWindow
 from PyQt6.QtCore import pyqtSlot
 from PyQt6.QtWidgets import QFileDialog
 
-from pipeline.preprocessing.preprocessingworker import PreprocessingWorker
+from .pipeline.preprocessing.preprocessingworker import PreprocessingWorker
 from .pipeline.beheading import skel_helper, spine_analysis, polyline_utils
 from .pipeline.preprocessing import meshhelper
 from .pipeline.beheading import geometry as geom
@@ -286,6 +286,8 @@ class MainFormDsb(OrsAbstractWindow):
             self.ui.lbl_status.setText("No component found for base - cancelling beheading")
             return
 
+        centroid = np.array(closest_component.centroid)
+
         ors_mesh = meshhelper.mesh_to_ors(mesh=closest_component)
         head_name = self.ui.line_head_name.text()
         ors_mesh.setTitle(f"Spine Head {head_name}")
@@ -294,7 +296,7 @@ class MainFormDsb(OrsAbstractWindow):
 
         if filepath := self.ui.line_csv_output.text():
             vol = closest_component.volume / 1e9  # Convert from nm³ to μm³
-            payload.csv_save(filepath, head_name, current_idx + 1, vol)
+            payload.csv_save(filepath, head_name, current_idx + 1, vol, self.neck_pt_3d, centroid)
 
     @pyqtSlot()
     def on_btn_go_to_spine_clicked(self):
