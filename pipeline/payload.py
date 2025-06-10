@@ -84,7 +84,7 @@ def csv_save(filepath: str, head_name: str, head_idx: int, head_vol: float, behe
 
         # Now append the new head information to the CSV file
         with open(filepath, "a", encoding="utf-8-sig") as f:
-            f.write(f"{head_idx},{head_name},{head_vol},{beheading_point[0]},{beheading_point[1]},{beheading_point[2]},{centroid[0]},{centroid[1]},{centroid[2]}\n")
+            f.write(f"{head_idx},\"{head_name}\",{head_vol},{beheading_point[0]},{beheading_point[1]},{beheading_point[2]},{centroid[0]},{centroid[1]},{centroid[2]}\n")
     except (FileNotFoundError, PermissionError, IsADirectoryError, NotADirectoryError, OSError):
         return False
 
