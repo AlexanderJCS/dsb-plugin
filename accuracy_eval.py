@@ -103,9 +103,9 @@ def plot_bland_altman(x: pd.Series, y: pd.Series, labels=None):
     #     plt.text(mean_vals[i], diffs[i], txt, fontsize=6, ha="left", va="bottom")
 
     plt.axhline(0, linestyle="--", color="red")
-    plt.title("Bland–Altman Plot")
+    plt.title("Bland–Altman Plot of DSB Accuracy")
     plt.xlabel("Mean Volume (μm³)")
-    plt.ylabel("Volume Difference (μm³)")
+    plt.ylabel("Volume Difference (DSB - GT) (μm³)")
     plt.show()
 
 
