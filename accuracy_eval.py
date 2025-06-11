@@ -1,159 +1,150 @@
-"""
-Generate the ground truth CSV using this script in the Dragonfly Python console:
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.ticker import MaxNLocator
 
-multiroi = ...
+GROUND_TRUTH_PATH = "data/cell1_roi5_ground_truth_smoothed.csv"
+DSB_PATH = "data/cell1_roi5_automatic.csv"
 
-import trimesh
-csv = "name,volume,com_x,com_y,com_z"
-for label in range(1, multiroi.getLabelCount() + 1):
-    roi = ROI()
-    roi.copyShapeFromStructuredGrid(multiroi)
-    multiroi.addToVolumeROI(roi, label)
-    name = multiroi.getLabelName(label)
 
-    # Convert to smoothed mesh then get volume
-    scale_x = roi.getXSpacing()
-    scale_y = roi.getYSpacing()
-    scale_z = roi.getZSpacing()
+def load_data(gt_path: str, dsb_path: str):
+    """Load ground truth and DSB dataframes."""
+    gt = pd.read_csv(gt_path)
+    dsb = pd.read_csv(dsb_path)
+    return gt, dsb
 
-    # Aim to have zSample = 2 and adjust xSample and ySample accordingly
-    z_sample = 2
-    x_sample = int(round(scale_z / scale_x * z_sample))
-    y_sample = int(round(scale_z / scale_y * z_sample))
 
-    # Clamp x_sample and y_sample to [2, 10] for performance reasons
-    x_sample = max(2, min(x_sample, 10))
-    y_sample = max(2, min(y_sample, 10))
+def find_nearest_neighbors(gt_pts: np.ndarray, dsb_pts: np.ndarray):
+    """
+    For each point in dsb_pts, find the index and distance of the nearest point in gt_pts.
+    Returns:
+        indices: int array of shape (n_dsb,)
+        distances: float array of same shape
+    """
+    n = dsb_pts.shape[0]
+    indices = np.empty(n, dtype=int)
+    distances = np.empty(n, dtype=float)
 
-    dragonfly_mesh = roi.getAsMarchingCubesMesh(
-        isovalue=0.5,
-        bSnapToContour=False,
-        flipNormal=False,
-        timeStep=0,
-        xSample=x_sample,
-        ySample=y_sample,
-        zSample=z_sample,
-        pNearest=False,
-        pWorld=True,
-        IProgress=None,
-        pMesh=None
+    for i, pt in enumerate(dsb_pts):
+        deltas = gt_pts - pt
+        dist2 = np.einsum("ij,ij->i", deltas, deltas)
+        j = np.argmin(dist2)
+        indices[i] = j
+        distances[i] = np.sqrt(dist2[j])
+
+    return indices, distances
+
+
+def merge_ground_truth(gt: pd.DataFrame, dsb: pd.DataFrame, max_dist: float = 500.0):
+    """Match each DSB spine to the nearest GT spine and merge volumes/C.O.M., filtering out outliers."""
+    # Column names
+    dsb_coords = ["Head Centroid X (nm)", "Head Centroid Y (nm)", "Head Centroid Z (nm)"]
+    gt_coords = ["com_x", "com_y", "com_z"]
+
+    gt_pts = gt[gt_coords].to_numpy(dtype=float)
+    dsb_pts = dsb[dsb_coords].to_numpy(dtype=float)
+
+    idxs, dists = find_nearest_neighbors(gt_pts, dsb_pts)
+
+    # Build merged columns
+    merged = dsb.copy()
+    merged["GT_name"] = gt.loc[idxs, "name"].values
+    merged["GT_volume"] = gt.loc[idxs, "volume"].values
+    merged[["GT_com_x", "GT_com_y", "GT_com_z"]] = gt_pts[idxs]
+    merged["distance_nm"] = dists
+
+    # Filter out matches farther than threshold
+    merged = merged[merged["distance_nm"] < max_dist].reset_index(drop=True)
+
+    # Volume differences
+    merged["volume_diff"] = merged["Head Volume (μm³)"] - merged["GT_volume"]
+    merged["volume_percent_diff"] = (
+        merged["volume_diff"] / merged["Head Volume (μm³)"] * 100
     )
 
-    vertices = dragonfly_mesh.getVertices(0).getNDArray().reshape(-1, 3) * 1e9  # Convert from m to nm
-    edges = dragonfly_mesh.getEdges(0).getNDArray().reshape(-1, 3)
-    tm = trimesh.Trimesh(vertices=vertices, faces=edges)
-    vol = tm.volume / 1e9  # Convert from nm³ to μm³
-
-    center_of_mass = roi.getCenterOfMass(0)
-    csv += f"\n\"{name}\",{vol},{center_of_mass.getX()*1e9},{center_of_mass.getY()*1e9},{center_of_mass.getZ()*1e9}"
-
-with open(r"F:/DSB Files/cell1_roi5_ground_truth_smoothed.csv", "w") as f:
-    f.write(csv)
-"""
-
-import pandas as pd
-import matplotlib.pyplot as plt
-import numpy as np
-
-from meshparty import trimesh_vtk, trimesh_io
-from pipeline import payload
+    return merged
 
 
-GROUND_TRUTH_PATH = r"F:\DSB Files\cell1_roi5_ground_truth_smoothed.csv"
-DSB_PATH = r"F:\DSB Files\cell1_roi5_automatic.csv"
+def plot_histogram(data: pd.Series, title: str, x_label: str, bins: int = 50):
+    plt.figure()
+    plt.hist(data, bins=bins)
+    plt.title(title)
+    plt.xlabel(x_label)
+    ax = plt.gca()  # Get current axes
+    ax.yaxis.set_major_locator(MaxNLocator(integer=True))  # Integer y-axis
+    plt.ylabel("Count")
+    plt.show()
+
+
+def plot_scatter_with_identity(x: pd.Series, y: pd.Series, xlabel: str, ylabel: str, title: str):
+    plt.figure()
+    plt.scatter(x, y, alpha=0.7)
+    mn, mx = min(x.min(), y.min()), max(x.max(), y.max())
+    plt.plot([mn, mx], [mn, mx], linestyle="--", color="red")
+    plt.title(title)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.show()
+
+
+def plot_bland_altman(x: pd.Series, y: pd.Series, labels=None):
+    """
+    Creates a Bland–Altman plot comparing x & y.
+    If labels is provided, it's a sequence of text labels for each point.
+    """
+    mean_vals = (x + y) / 2
+    diffs = x - y
+
+    plt.figure()
+    plt.scatter(mean_vals, diffs, alpha=0.7)
+
+    # Annotate points if labels are given
+    # for i, txt in enumerate(labels):
+    #     plt.text(mean_vals[i], diffs[i], txt, fontsize=6, ha="left", va="bottom")
+
+    plt.axhline(0, linestyle="--", color="red")
+    plt.title("Bland–Altman Plot")
+    plt.xlabel("Mean Volume (μm³)")
+    plt.ylabel("Volume Difference (μm³)")
+    plt.show()
 
 
 def main():
-    df_ground_truth = pd.read_csv(GROUND_TRUTH_PATH)
-    df_dsb = pd.read_csv(DSB_PATH)
+    gt_df, dsb_df = load_data(GROUND_TRUTH_PATH, DSB_PATH)
+    merged = merge_ground_truth(gt_df, dsb_df)
 
-    print(df_dsb.columns)
-    print(df_ground_truth.head())
+    # Histograms
+    plot_histogram(
+        merged["volume_percent_diff"],
+        title="Volume % Difference (DSB vs GT)",
+        x_label="Percent Difference (%)",
+        bins=15
+    )
+    plot_histogram(
+        merged["volume_diff"],
+        title="Volume Difference (DSB – GT) μm³",
+        x_label="Difference (μm³)",
+        bins=15
+    )
 
-    # For each row in the DSB file, find the corresponding ground truth entry by finding the closest point
-    # The location of the head in the DSB file is given by the columns Head Centroid X (nm), etc.
-    # The location of the head in the ground truth file is given by the columns com_x, com_y, com_z
-    dsb_x_col = "Head Centroid X (nm)"
-    dsb_y_col = "Head Centroid Y (nm)"
-    dsb_z_col = "Head Centroid Z (nm)"
-    gt_x_col = "com_x"
-    gt_y_col = "com_y"
-    gt_z_col = "com_z"
+    # Scatter DSB vs GT
+    plot_scatter_with_identity(
+        merged["GT_volume"],
+        merged["Head Volume (μm³)"],
+        xlabel="Ground Truth Volume (μm³)",
+        ylabel="DSB Volume (μm³)",
+        title="DSB vs Ground Truth Head Volume"
+    )
 
-    # Build arrays
-    pts_gt = df_ground_truth[[gt_x_col, gt_y_col, gt_z_col]].to_numpy(dtype=float)
-    pts_dsb = df_dsb[[dsb_x_col, dsb_y_col, dsb_z_col]].to_numpy(dtype=float)
-
-    n_dsb = pts_dsb.shape[0]
-    idxs = np.empty(n_dsb, dtype=int)
-    dists = np.empty(n_dsb, dtype=float)
-    for i in range(n_dsb):
-        diff = pts_gt - pts_dsb[i]
-        dist2 = np.sum(diff ** 2, axis=1)
-        j = np.argmin(dist2)
-        idxs[i] = j
-        dists[i] = np.sqrt(dist2[j])
-
-    # Gather matched ground-truth info
-    matched_names = df_ground_truth.loc[idxs, "name"].values
-    matched_vols = df_ground_truth.loc[idxs, "volume"].values
-    matched_coms = pts_gt[idxs]  # array of shape (n_dsb, 3)
-
-    # Add to df_dsb
-    df_dsb = df_dsb.copy()
-    if matched_names is not None:
-        df_dsb["GT_name"] = matched_names
-    if matched_vols is not None:
-        df_dsb["GT_volume"] = matched_vols
-    df_dsb["GT_com_x"] = matched_coms[:, 0]
-    df_dsb["GT_com_y"] = matched_coms[:, 1]
-    df_dsb["GT_com_z"] = matched_coms[:, 2]
-    df_dsb["distance_nm"] = dists
-
-    # Remove entries with distances greater than 500nm, since they're likely not paired to the right spine
-    df_dsb = df_dsb[df_dsb["distance_nm"] < 500]
-
-    # Percent difference in volume between ground truth and DSB
-    df_dsb["volume_percent_diff"] = (df_dsb["Head Volume (μm³)"] - df_dsb["GT_volume"]) / df_dsb["Head Volume (μm³)"] * 100
-
-    df_dsb["volume_diff"] = df_dsb["Head Volume (μm³)"] - df_dsb["GT_volume"]
-
-    print(df_dsb["volume_diff"][df_dsb["volume_diff"] < 0].count(), "spines have a smaller volume than ground truth")
-    print(df_dsb["volume_diff"][df_dsb["volume_diff"] > 0].count(), "spines have a larger volume than ground truth")
-
-    plt.hist(df_dsb["volume_percent_diff"], bins=50)
-    plt.show()
-
-    plt.hist(df_dsb["volume_diff"], bins=50)
-    plt.show()
-
-    plt.scatter(df_dsb["GT_volume"], df_dsb["Head Volume (μm³)"])
-    # y=x line
-    max_volume = max(df_dsb["Head Volume (μm³)"].max(), df_dsb["GT_volume"].max())
-    min_volume = min(df_dsb["Head Volume (μm³)"].min(), df_dsb["GT_volume"].min())
-    plt.plot([min_volume, max_volume], [min_volume, max_volume], color='red', linestyle='--')
-
-    plt.xlabel("Ground Truth Head Volume (μm³)")
-    plt.ylabel("DSB Head Volume (μm³)")
-    plt.title("DSB vs Ground Truth Head Volume")
-
-    plt.show()
-
-    # Bland-Altman plot
-    mean_volume = (df_dsb["Head Volume (μm³)"] + df_dsb["GT_volume"]) / 2
-    volume_diff = df_dsb["Head Volume (μm³)"] - df_dsb["GT_volume"]
-    plt.scatter(mean_volume, volume_diff)
-
-    for i, (x, y) in enumerate(zip(mean_volume, volume_diff)):
-        label = f"({df_dsb.loc[df_dsb.index[i], 'GT_name']}, idx {df_dsb.loc[df_dsb.index[i], 'Head Index']})"  # or another column name, or str(df_dsb.index[i])
-        # Offset the text a bit so it doesn’t sit exactly on the point:
-        plt.text(x, y, str(label), fontsize=6, ha='left', va='bottom')
-
-    plt.axhline(0, color='red', linestyle='--')
-    plt.xlabel("Mean Volume (μm³)")
-    plt.ylabel("Volume Difference (μm³)")
-    plt.title("Bland-Altman Plot")
-    plt.show()
+    # Bland–Altman
+    plot_bland_altman(
+        merged["Head Volume (μm³)"],
+        merged["GT_volume"],
+        labels=[
+            # f"{row.GT_name}, idx {row['Head Index']}"
+            # for _, row in merged.iterrows()
+        ]
+    )
 
 
 if __name__ == "__main__":
