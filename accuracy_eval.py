@@ -2,17 +2,52 @@
 Generate the ground truth CSV using this script in the Dragonfly Python console:
 
 multiroi = ...
+
+import trimesh
 csv = "name,volume,com_x,com_y,com_z"
 for label in range(1, multiroi.getLabelCount() + 1):
-    copy_roi = ROI()
-    copy_roi.copyShapeFromStructuredGrid(multiroi)
-    multiroi.addToVolumeROI(copy_roi, label)
+    roi = ROI()
+    roi.copyShapeFromStructuredGrid(multiroi)
+    multiroi.addToVolumeROI(roi, label)
     name = multiroi.getLabelName(label)
-    vol = copy_roi.getVolume(0)*1e18  # m^3 -> um^3
-    center_of_mass = copy_roi.getCenterOfMass(0)
+
+    # Convert to smoothed mesh then get volume
+    scale_x = roi.getXSpacing()
+    scale_y = roi.getYSpacing()
+    scale_z = roi.getZSpacing()
+
+    # Aim to have zSample = 2 and adjust xSample and ySample accordingly
+    z_sample = 2
+    x_sample = int(round(scale_z / scale_x * z_sample))
+    y_sample = int(round(scale_z / scale_y * z_sample))
+
+    # Clamp x_sample and y_sample to [2, 10] for performance reasons
+    x_sample = max(2, min(x_sample, 10))
+    y_sample = max(2, min(y_sample, 10))
+
+    dragonfly_mesh = roi.getAsMarchingCubesMesh(
+        isovalue=0.5,
+        bSnapToContour=False,
+        flipNormal=False,
+        timeStep=0,
+        xSample=x_sample,
+        ySample=y_sample,
+        zSample=z_sample,
+        pNearest=False,
+        pWorld=True,
+        IProgress=None,
+        pMesh=None
+    )
+
+    vertices = dragonfly_mesh.getVertices(0).getNDArray().reshape(-1, 3) * 1e9  # Convert from m to nm
+    edges = dragonfly_mesh.getEdges(0).getNDArray().reshape(-1, 3)
+    tm = trimesh.Trimesh(vertices=vertices, faces=edges)
+    vol = tm.volume / 1e9  # Convert from nm³ to μm³
+
+    center_of_mass = roi.getCenterOfMass(0)
     csv += f"\n\"{name}\",{vol},{center_of_mass.getX()*1e9},{center_of_mass.getY()*1e9},{center_of_mass.getZ()*1e9}"
 
-with open(r"path/to/save/ground_truth.csv", "w") as f:
+with open(r"F:/DSB Files/cell1_roi5_ground_truth_smoothed.csv", "w") as f:
     f.write(csv)
 """
 
@@ -24,8 +59,8 @@ from meshparty import trimesh_vtk, trimesh_io
 from pipeline import payload
 
 
-GROUND_TRUTH_PATH = r"F:\DSB Files\cell1_roi5_ground_truth.csv"
-DSB_PATH = r"F:\DSB Files\cell1_roi5_manual.csv"
+GROUND_TRUTH_PATH = r"F:\DSB Files\cell1_roi5_ground_truth_smoothed.csv"
+DSB_PATH = r"F:\DSB Files\cell1_roi5_automatic.csv"
 
 
 def main():
