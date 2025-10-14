@@ -29,14 +29,9 @@ class MainFormDsb(OrsAbstractWindow):
         self.ui = Ui_MainFormDsb()
         self.ui.setupUi(self)
         self.ui.ccb_dendrite_roi_chooser.setManagedClass([ORSModel.ROI])
-        self.ui.ccb_annotation_chooser.setManagedClass([ORSModel.Annotation])
-        self.ui.ccb_multiroi_chooser.setManagedClass([ORSModel.MultiROI])
-        self.ui.ccb_annotation_chooser.setEnabled(self.ui.chk_vis_annotations.isChecked())
-        self.ui.ccb_multiroi_chooser.setEnabled(self.ui.chk_vis_multiroi.isChecked())
+        self.ui.ccb_channel_chooser.setManagedClass([ORSModel.Channel])
 
         # I have to set these manually for some reason
-        self.ui.chk_vis_annotations.stateChanged.connect(self.on_chk_vis_annotations_stateChanged)
-        self.ui.chk_vis_multiroi.stateChanged.connect(self.on_chk_vis_multiroi_stateChanged)
         self.ui.line_spine_num.textEdited.connect(self.on_line_spine_num_textEdited)
 
         self.ui.line_spine_num.setValidator(QIntValidator(0, 9999))
