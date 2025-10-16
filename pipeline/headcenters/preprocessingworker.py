@@ -27,6 +27,7 @@ class PreprocessingWorker(QThread):
             self.update_label.emit("Converting ROI to Mesh")
             ors_mesh = meshhelper.roi_to_ors_mesh(self.channel, self.selected_roi, smooth=True)
             ors_mesh.setTitle("DSB Dendrite Mesh")
+            ors_mesh.setIsRepresentable(True)
             ors_mesh.publish()
 
             tm_mesh = meshhelper.ors_to_trimesh(ors_mesh)
@@ -36,7 +37,7 @@ class PreprocessingWorker(QThread):
 
             self.update_label.emit("Pruning branches")
             spine_skeletons, radii = spine_detection.get_branch_polylines_by_length(
-                skeleton, min_length=0, max_length=10000 / 1e6, min_nodes=5, max_nodes=math.inf,
+                skeleton, min_length=7, max_length=10000, min_nodes=5, max_nodes=math.inf,
                 radius_threshold=math.inf
             )
 
