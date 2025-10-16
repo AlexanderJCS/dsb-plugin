@@ -7,7 +7,9 @@ from ORSModel.ors import Channel, ROI
 from ORSServiceClass.system.pathServices import OrsPath
 
 
-def computeInitialMesh(model: Channel, samplingX: int, samplingY: int, samplingZ: int, mask: ROI, line_edit_isovalue: float, smoothing: bool):
+def compute_mesh(model: Channel, samplingX: int, samplingY: int, samplingZ: int, mask: ROI, line_edit_isovalue: float, smoothing: bool):
+    impl = OrsSurfaceDetermination()
+
     if samplingX < 1 or samplingY < 1 or samplingZ < 1:
         print("Sampling must be at least 1")
         return
@@ -35,7 +37,7 @@ def computeInitialMesh(model: Channel, samplingX: int, samplingY: int, samplingZ
 
     # are we using a ROI mask ? must be checked and a valid ROI must be selected
     isovalue = 60.0  # todo: tune this
-    contourMesh = OrsSurfaceDetermination.generateContourMeshFromAROI(mask, isovalue,
+    contourMesh = impl.generateContourMeshFromAROI(mask, isovalue,
                                                                        samplingX,
                                                                        samplingY, samplingZ)
     if contourMesh is not None:
@@ -57,7 +59,7 @@ def computeInitialMesh(model: Channel, samplingX: int, samplingY: int, samplingZ
             # generate the contour
             isovalue = 60.0
             print(f'initializing surface with isovalue of: {isovalue} {samplingX} {samplingY} {samplingZ}')
-            contourMesh = OrsSurfaceDetermination.generateContourMeshFromAROI(aROI, isovalue,
+            contourMesh = impl.generateContourMeshFromAROI(aROI, isovalue,
                                                                                samplingX,
                                                                                samplingY, samplingZ)
             aROI.deleteObject()
@@ -67,7 +69,7 @@ def computeInitialMesh(model: Channel, samplingX: int, samplingY: int, samplingZ
     else:
         # note: if we denoise the channel, it might be a good idea to use the otsu value for the denoised channel
         # instead of the original otsu value
-        use_otsu = True  # todo: tune this
+        use_otsu = True
         if needDenoising and use_otsu:
             isovalue = model.getOtsu()
             print(f'initializing surface (dont exlcude voids) with denoised isovalue of: {isovalue} {samplingX} {samplingY} {samplingZ}')
@@ -75,7 +77,7 @@ def computeInitialMesh(model: Channel, samplingX: int, samplingY: int, samplingZ
             isovalue = line_edit_isovalue
             print(f'initializing surface (dont exlcude voids) with isovalue of: {isovalue} {samplingX} {samplingY} {samplingZ}')
 
-        contourMesh = OrsSurfaceDetermination.generateALinearContourMeshFromAChannel(inputChannel, isovalue,
+        contourMesh = impl.generateALinearContourMeshFromAChannel(inputChannel, isovalue,
                                                                                       samplingX,
                                                                                       samplingY, samplingZ)
     if contourMesh is not None:

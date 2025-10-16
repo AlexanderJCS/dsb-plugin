@@ -2,8 +2,10 @@ import numpy as np
 import skeletor as sk
 import trimesh
 
-from ORSModel.ors import ROI, FaceVertexMesh, Progress
+from ORSModel.ors import ROI, FaceVertexMesh, Channel
 import ORSModel
+
+from . import surface_determination
 
 
 def ors_to_trimesh(ors_mesh: FaceVertexMesh) -> trimesh.Trimesh:
@@ -18,54 +20,22 @@ def ors_to_trimesh(ors_mesh: FaceVertexMesh) -> trimesh.Trimesh:
     return trimesh.Trimesh(vertices=vertices, faces=edges)
 
 
-def roi_to_mesh(roi: ROI, cubic=False, smooth=True):
+def roi_to_ors_mesh(channel: Channel, mask: ROI, smooth=True) -> FaceVertexMesh:
     """
-    Does all the preprocessing required to convert a Dragonfly ROI to a trimesh mesh with smoothing applied.
+    Does all the preprocessing required to convert a Dragonfly ROI to a ORS mesh, optionally with smoothing applied.
     :return: The Trimesh mesh
     """
 
-    if not cubic:
-        scale_x = roi.getXSpacing()
-        scale_y = roi.getYSpacing()
-        scale_z = roi.getZSpacing()
-
-        # Aim to have zSample = 2 and adjust xSample and ySample accordingly
-        z_sample = 2
-        x_sample = int(round(scale_z / scale_x * z_sample))
-        y_sample = int(round(scale_z / scale_y * z_sample))
-
-        # Clamp x_sample and y_sample to [2, 10] for performance reasons
-        x_sample = max(2, min(x_sample, 10))
-        y_sample = max(2, min(y_sample, 10))
-
-        dragonfly_mesh = roi.getAsMarchingCubesMesh(
-            isovalue=0.5,
-            bSnapToContour=False,
-            flipNormal=False,
-            timeStep=0,
-            xSample=x_sample,
-            ySample=y_sample,
-            zSample=z_sample,
-            pNearest=False,
-            pWorld=True,
-            IProgress=None,
-            pMesh=None
-        )
-    else:
-        dragonfly_mesh = roi.getAsCubicMesh(True, None, None)
+    dragonfly_mesh = surface_determination.compute_mesh(channel, 1, 2, 1, mask, 60.0, smoothing=False)
 
     if 0 in (dragonfly_mesh.getVertexCount(0), dragonfly_mesh.getEdgeCount(0)):
-        # TODO: handle this edge case better
-        return trimesh.Trimesh()
+        return dragonfly_mesh
 
     # Smooth the mesh
     if smooth:
-        dragonfly_mesh.laplacianSmooth(2, 0, 0.3)
+        dragonfly_mesh.laplacianSmooth(1, 0, 0.9)
 
-    mesh = ors_to_trimesh(dragonfly_mesh)
-    dragonfly_mesh.deleteObjectAndAllItsChildren()
-
-    return mesh
+    return dragonfly_mesh
 
 
 def mesh_to_ors(mesh: trimesh.Trimesh) -> FaceVertexMesh:
@@ -116,26 +86,6 @@ def annotations_to_list(annotations: ORSModel.Annotation) -> list[tuple[np.array
         ))
 
     return output
-
-
-def multiroi_to_mesh(multiroi: ORSModel.MultiROI) -> trimesh.Trimesh:
-    """
-    Converts a Dragonfly MultiROI to a trimesh mesh.
-    :param multiroi: The MultiROI to convert
-    :return: The trimesh mesh
-    """
-
-    meshes = []
-
-    for label in range(1, multiroi.getLabelCount() + 1):
-        copy_roi: ORSModel.ors.ROI = ORSModel.ors.ROI()
-        copy_roi.copyShapeFromStructuredGrid(multiroi)
-        multiroi.addToVolumeROI(copy_roi, label)
-
-        meshes.append(roi_to_mesh(copy_roi, True, False))
-        copy_roi.deleteObjectAndAllItsChildren()
-
-    return trimesh.util.concatenate(meshes, trimesh.Trimesh())
 
 
 def skeletonize_mesh(mesh: trimesh.Trimesh) -> sk.Skeleton:
