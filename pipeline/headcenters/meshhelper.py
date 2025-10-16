@@ -22,7 +22,7 @@ def ors_to_trimesh(ors_mesh: FaceVertexMesh) -> trimesh.Trimesh:
 
 def roi_to_ors_mesh(channel: Channel, mask: ROI, smooth=True) -> FaceVertexMesh:
     """
-    Does all the preprocessing required to convert a Dragonfly ROI to a ORS mesh, optionally with smoothing applied.
+    Does all the headcenters required to convert a Dragonfly ROI to a ORS mesh, optionally with smoothing applied.
     :return: The Trimesh mesh
     """
 

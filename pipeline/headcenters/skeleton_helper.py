@@ -288,6 +288,8 @@ def get_radius_point(point: np.ndarray, mesh, n_rays=20, aggregate='mean', proje
                     ignore those cases (``None``), assign an arbitrary number or
                     we can fall back to radii from k-nearest-neighbors (``knn``).
 
+    path_interpolation_spacing: The distance between points on the path (polyline) to sample.
+
     :returns radius at point
 
     """

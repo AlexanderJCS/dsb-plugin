@@ -16,8 +16,8 @@ def get_branch_polylines_by_length(skeleton, min_length=1000, max_length=5000, m
         The maximum branch length in nanometers.
     min_nodes : int
         The minimum number of nodes in the branch.
-    max_nodes : int
-        The maximum number of nodes in the branch.
+    max_nodes : int | float
+        The maximum number of nodes in the branch, or math.inf
     radius_threshold : float
         The maximum radius of the last node in nanometers.
 

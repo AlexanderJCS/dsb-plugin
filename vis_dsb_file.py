@@ -7,11 +7,10 @@ Annotations and PSDs are not visualized in this script.
 import hashlib
 import math
 
-import trimesh
 from meshparty import trimesh_vtk as vtk
 
 from pipeline import payload as pld
-from pipeline.beheading import polyline_utils
+from pipeline.radii import spine_detection
 
 DSB_FILE = "F:/DSB Files/cell1_roi5.dsb"
 

@@ -70,7 +70,7 @@ def csv_save(filepath: str, head_name: str, head_idx: int, head_vol: float, behe
     :param head_name: The head name of the dendritic spine head
     :param head_idx: The index of the dendritic spine head
     :param head_vol: The volume of the dendritic spine head in μm³
-    :param beheading_point: The beheading point of the dendritic spine head in nm
+    :param beheading_point: The radii point of the dendritic spine head in nm
     :param centroid: The centroid of the dendritic spine head in nm
     :return: True if saved successfully, False otherwise
     """

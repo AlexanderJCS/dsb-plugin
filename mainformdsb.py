@@ -14,10 +14,10 @@ from ORSServiceClass.windowclasses.orsabstractwindow import OrsAbstractWindow
 from PyQt6.QtCore import pyqtSlot
 from PyQt6.QtWidgets import QFileDialog
 
-from .pipeline.preprocessing.preprocessingworker import PreprocessingWorker
-from .pipeline.beheading import skel_helper, spine_analysis, polyline_utils
-from .pipeline.preprocessing import meshhelper
-from .pipeline.beheading import geometry as geom
+from .pipeline.headcenters.preprocessingworker import PreprocessingWorker
+from .pipeline.radii import skeleton_helper, spine_analysis, spine_detection
+from .pipeline.headcenters import meshhelper
+from .pipeline.radii import geometry as geom
 from .pipeline import payload
 from .ui_mainformdsb import Ui_MainFormDsb
 from .visualize import visualize as vis
@@ -160,7 +160,7 @@ class MainFormDsb(OrsAbstractWindow):
         """
 
         if self.visualizer is None:
-            self.ui.lbl_status.setText("Load a preprocessing file first")
+            self.ui.lbl_status.setText("Load a headcenters file first")
             return
 
         vis_current = self.visualizer.currently_visualizing
@@ -235,14 +235,6 @@ class MainFormDsb(OrsAbstractWindow):
         self.ui.vis_widget.reset_camera()
         self.jump_vis(0)
         self.ui.lbl_spine_nums_total.setText(f"/ {len(self.spine_skeletons)}")
-
-    @pyqtSlot()
-    def on_chk_vis_annotations_stateChanged(self):
-        self.ui.ccb_annotation_chooser.setEnabled(self.ui.chk_vis_annotations.isChecked())
-
-    @pyqtSlot()
-    def on_chk_vis_multiroi_stateChanged(self):
-        self.ui.ccb_multiroi_chooser.setEnabled(self.ui.chk_vis_multiroi.isChecked())
 
     def change_name(self, neck_point) -> Optional[str]:
         if self.annotations_kdtree is None:
@@ -341,7 +333,7 @@ class MainFormDsb(OrsAbstractWindow):
                 closest_component_dist = dist
 
         if closest_component is None:
-            self.ui.lbl_status.setText("No component found for base - cancelling beheading")
+            self.ui.lbl_status.setText("No component found for base - cancelling radii")
             return
 
         centroid = np.array(closest_component.centroid)
