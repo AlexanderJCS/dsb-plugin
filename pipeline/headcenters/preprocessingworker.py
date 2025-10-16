@@ -45,7 +45,7 @@ class PreprocessingWorker(QThread):
             head_radii = []
             head_center_points = []
             for idx, (spine_skeleton, spine_radii) in enumerate(zip(spine_skeletons, radii)):
-                self.update_label.emit(f"Computing head radius for {idx}/{total_length} spines")
+                self.update_label.emit(f"Computing head radius for {idx + 1}/{total_length} spines")
                 spacing = 3  # nm
 
                 points_tangents, radii_tangents = skeleton_helper.get_radius_polyline(
@@ -68,11 +68,14 @@ class PreprocessingWorker(QThread):
                 head_radii.append(radius)
                 head_center_points.append(head_point_3d)
 
+            self.update_label.emit("Creating head centers annotation")
             heads_annotation: ORSModel.ors.Annotation = PrimitiveHelper.createPrimitive(
                 primitiveClass=ORSModel.ors.VisualPoints,
-                aLayoutName="Test",
+                aLayoutName="head_centers_annotation",
                 associatedState="OrsStatePointsEdit"
             )
+
+            heads_annotation.setTitle("Head Centers Annotation")
 
             for head_point in head_center_points:
                 head_point /= 1e9  # nm -> m
