@@ -89,35 +89,6 @@
            </property>
           </widget>
          </item>
-         <item row="3" column="0">
-          <widget class="QPushButton" name="btn_preprocessing_output">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>26</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>Choose Output File</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="1">
-          <widget class="QLineEdit" name="line_preprocessing_output_path">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>26</height>
-            </size>
-           </property>
-          </widget>
-         </item>
          <item row="1" column="0">
           <widget class="QLabel" name="label">
            <property name="text">

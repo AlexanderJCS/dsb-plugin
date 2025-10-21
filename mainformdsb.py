@@ -33,17 +33,7 @@ class MainFormDsb(OrsAbstractWindow):
             self.ui.lbl_status.setText("No ROI selected")
             return
 
-        filepath = self.ui.line_preprocessing_output_path.text()
-        if not filepath:
-            self.ui.lbl_status.setText("No output path selected")
-            return
-
-        if not os.path.isdir(os.path.dirname(filepath)):
-            self.ui.lbl_status.setText("Output path is invalid")
-            return
-
         self.preprocessing_worker = PreprocessingWorker(
-            filepath,
             ORSModel.orsObj(self.ui.ccb_channel_chooser.getSelectedGuid()),
             selected_roi
         )
@@ -53,33 +43,3 @@ class MainFormDsb(OrsAbstractWindow):
 
         self.preprocessing_worker.start()
         self.ui.btn_preprocessing_run.setEnabled(False)  # Disable it until the worker is done
-
-    @pyqtSlot()
-    def on_btn_select_csv_output_clicked(self):
-        filepath, _ = QFileDialog.getSaveFileName(
-            None,
-            "Select Output CSV Location",
-            "",
-            "CSV File (*.csv)"
-        )
-
-        if filepath:
-            self.ui.line_csv_output.setText(filepath)
-        else:
-            self.ui.lbl_status.setText("No file selected")
-            return
-
-    @pyqtSlot()
-    def on_btn_preprocessing_output_clicked(self):
-        filepath, _ = QFileDialog.getSaveFileName(
-            None,
-            "Select Output File Location",
-            "",
-            "DSB Files (*.dsb)"
-        )
-
-        if filepath:
-            self.ui.line_preprocessing_output_path.setText(filepath)
-        else:
-            self.ui.lbl_status.setText("No file selected")
-            return

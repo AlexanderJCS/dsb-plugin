@@ -15,12 +15,11 @@ class PreprocessingWorker(QThread):
     update_label: pyqtSignal = pyqtSignal(str)
     finished: pyqtSignal = pyqtSignal()
 
-    def __init__(self, filepath: str, channel: ORSModel.ors.Channel, selected_roi: ORSModel.ors.ROI):
+    def __init__(self, channel: ORSModel.ors.Channel, selected_roi: ORSModel.ors.ROI):
         super().__init__()
 
         self.selected_roi = selected_roi
         self.channel = channel
-        self.filepath = filepath
 
     def run(self):
         try:
@@ -83,10 +82,9 @@ class PreprocessingWorker(QThread):
                 heads_annotation.addControlPoint(ORSModel.ors.Vector3(*head_point), 0, None)
 
             heads_annotation.publish()
-
+            self.update_label.emit("Finished")
 
         except Exception as e:
             self.update_label.emit(f"An unexpected error occurred while preprocessing")
             raise e
-        finally:
-            self.finished.emit()
+   
