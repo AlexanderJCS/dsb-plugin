@@ -29,17 +29,17 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="tabShape">
-      <enum>QTabWidget::Rounded</enum>
+      <enum>QTabWidget::TabShape::Rounded</enum>
      </property>
      <property name="currentIndex">
       <number>1</number>
      </property>
      <property name="elideMode">
-      <enum>Qt::ElideNone</enum>
+      <enum>Qt::TextElideMode::ElideNone</enum>
      </property>
-     <widget class="QWidget" name="preprocessing">
+     <widget class="QWidget" name="head_center">
       <attribute name="title">
-       <string>Preprocessing</string>
+       <string>Head Center Finding</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
@@ -140,7 +140,7 @@
        <item>
         <spacer name="verticalSpacer">
          <property name="orientation">
-          <enum>Qt::Vertical</enum>
+          <enum>Qt::Orientation::Vertical</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
@@ -152,174 +152,54 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="beheading">
+     <widget class="QWidget" name="radius">
       <attribute name="title">
-       <string>Beheading</string>
+       <string>Radius Measurement</string>
       </attribute>
-      <layout class="QVBoxLayout" name="main_vertical_layout" stretch="0,0,1,0,0,0,0,0,0,0">
+      <layout class="QVBoxLayout" name="main_vertical_layout" stretch="0">
        <item>
         <layout class="QFormLayout" name="formLayout_3">
          <item row="0" column="0">
+          <widget class="QLabel" name="label_2">
+           <property name="text">
+            <string>Dendrite Mesh</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="OrsObjectClassComboBox" name="ccb_dragonfly_mesh" native="true"/>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_3">
+           <property name="text">
+            <string>Head Points</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="OrsObjectClassComboBox" name="ccb_head_points" native="true"/>
+         </item>
+         <item row="2" column="0">
           <widget class="QPushButton" name="btn_select_csv_output">
            <property name="text">
             <string>Select CSV Output</string>
            </property>
           </widget>
          </item>
-         <item row="0" column="1">
+         <item row="2" column="1">
           <widget class="QLineEdit" name="line_csv_output"/>
          </item>
         </layout>
        </item>
-       <item>
-        <widget class="QPushButton" name="btn_select_preprocessing_file">
-         <property name="text">
-          <string>Select Preprocessing File</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QtInteractor" name="vis_widget" native="true">
-         <property name="minimumSize">
-          <size>
-           <width>0</width>
-           <height>26</height>
-          </size>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_6" stretch="0,0,0,0,0">
-         <item>
-          <widget class="QLabel" name="label_3">
-           <property name="text">
-            <string>Spine no. </string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLineEdit" name="line_spine_num">
-           <property name="maximumSize">
-            <size>
-             <width>40</width>
-             <height>16777215</height>
-            </size>
-           </property>
-           <property name="baseSize">
-            <size>
-             <width>0</width>
-             <height>0</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>0</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLabel" name="lbl_spine_nums_total">
-           <property name="text">
-            <string>/ 0</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="btn_go_to_spine_num">
-           <property name="maximumSize">
-            <size>
-             <width>30</width>
-             <height>16777215</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>Go</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <spacer name="horizontalSpacer">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_3">
-         <item>
-          <widget class="QPushButton" name="btn_prev_spine">
-           <property name="text">
-            <string>Previous Spine</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="btn_next_spine">
-           <property name="text">
-            <string>Next Spine</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <widget class="QSlider" name="sldr_neck_point">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QCheckBox" name="chk_compute_beheading_pt">
-         <property name="text">
-          <string>Automatically Compute Beheading Point</string>
-         </property>
-         <property name="checked">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <layout class="QFormLayout" name="formLayout_2">
-         <item row="0" column="0">
-          <widget class="QLabel" name="label_2">
-           <property name="text">
-            <string>Head Name:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="1">
-          <widget class="QLineEdit" name="line_head_name"/>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <layout class="QHBoxLayout" name="horizontalLayout">
-         <item>
-          <widget class="QPushButton" name="btn_save_head">
-           <property name="text">
-            <string>Save Head</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <widget class="QPushButton" name="btn_go_to_spine">
-         <property name="text">
-          <string>Go to Spine</string>
-         </property>
-        </widget>
-       </item>
       </layout>
      </widget>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPushButton" name="btn_process_head_radii">
+     <property name="text">
+      <string>Process</string>
+     </property>
     </widget>
    </item>
    <item>
@@ -332,12 +212,6 @@
   </layout>
  </widget>
  <customwidgets>
-  <customwidget>
-   <class>QtInteractor</class>
-   <extends>QWidget</extends>
-   <header>pyvistaqt</header>
-   <container>1</container>
-  </customwidget>
   <customwidget>
    <class>OrsObjectClassComboBox</class>
    <extends>QWidget</extends>
