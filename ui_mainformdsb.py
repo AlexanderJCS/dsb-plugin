@@ -12,13 +12,12 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 class Ui_MainFormDsb(object):
     def setupUi(self, MainFormDsb):
         MainFormDsb.setObjectName("MainFormDsb")
-        MainFormDsb.resize(628, 778)
+        MainFormDsb.resize(418, 210)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Preferred, QtWidgets.QSizePolicy.Policy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(MainFormDsb.sizePolicy().hasHeightForWidth())
         MainFormDsb.setSizePolicy(sizePolicy)
-        MainFormDsb.setMinimumSize(QtCore.QSize(450, 450))
         self.verticalLayout = QtWidgets.QVBoxLayout(MainFormDsb)
         self.verticalLayout.setObjectName("verticalLayout")
         self.tabWidget = QtWidgets.QTabWidget(parent=MainFormDsb)
@@ -88,11 +87,13 @@ class Ui_MainFormDsb(object):
         self.line_csv_output.setObjectName("line_csv_output")
         self.formLayout_3.setWidget(2, QtWidgets.QFormLayout.ItemRole.FieldRole, self.line_csv_output)
         self.main_vertical_layout.addLayout(self.formLayout_3)
+        self.btn_process_head_radii = QtWidgets.QPushButton(parent=self.radius)
+        self.btn_process_head_radii.setObjectName("btn_process_head_radii")
+        self.main_vertical_layout.addWidget(self.btn_process_head_radii)
+        spacerItem1 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Expanding)
+        self.main_vertical_layout.addItem(spacerItem1)
         self.tabWidget.addTab(self.radius, "")
         self.verticalLayout.addWidget(self.tabWidget)
-        self.btn_process_head_radii = QtWidgets.QPushButton(parent=MainFormDsb)
-        self.btn_process_head_radii.setObjectName("btn_process_head_radii")
-        self.verticalLayout.addWidget(self.btn_process_head_radii)
         self.lbl_status = QtWidgets.QLabel(parent=MainFormDsb)
         self.lbl_status.setText("")
         self.lbl_status.setObjectName("lbl_status")
@@ -112,8 +113,8 @@ class Ui_MainFormDsb(object):
         self.label_2.setText(_translate("MainFormDsb", "Dendrite Mesh"))
         self.label_3.setText(_translate("MainFormDsb", "Head Points"))
         self.btn_select_csv_output.setText(_translate("MainFormDsb", "Select CSV Output"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.radius), _translate("MainFormDsb", "Radius Measurement"))
         self.btn_process_head_radii.setText(_translate("MainFormDsb", "Process"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.radius), _translate("MainFormDsb", "Radius Measurement"))
 from ORSServiceClass.ORSWidget.orsobjectclasscombobox.orsobjectclasscombobox import OrsObjectClassComboBox
 
 
