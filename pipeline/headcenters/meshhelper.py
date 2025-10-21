@@ -2,10 +2,19 @@ import numpy as np
 import skeletor as sk
 import trimesh
 
-from ORSModel.ors import ROI, FaceVertexMesh, Channel
+from ORSModel.ors import ROI, FaceVertexMesh, Channel, Annotation
 import ORSModel
 
 from . import surface_determination
+
+
+def get_points_from_annotation(ann: Annotation):
+    points = []
+    for i in range(ann.getControlPointCount(0)):
+        pos = ann.getControlPointPositionAtIndex(i, 0, None)
+        points.append(np.array([pos.getX(), pos.getY(), pos.getZ()], dtype=np.float64) * 1e9)  # m -> nm
+
+    return points
 
 
 def ors_to_trimesh(ors_mesh: FaceVertexMesh) -> trimesh.Trimesh:

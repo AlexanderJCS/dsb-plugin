@@ -11,6 +11,8 @@ from . import spine_analysis as sa
 
 
 from . import meshhelper
+
+
 class PreprocessingWorker(QThread):
     update_label: pyqtSignal = pyqtSignal(str)
     finished: pyqtSignal = pyqtSignal()
@@ -52,6 +54,8 @@ class PreprocessingWorker(QThread):
                     aggregate='mean', projection='tangents', path_interpolation_spacing=spacing,
                     fallback=None
                 )
+
+                print(f"Spine {idx} has {len(points_tangents)} points for head radius computation")
 
                 cumulative_points = geom.accumulate(points_tangents)
 
