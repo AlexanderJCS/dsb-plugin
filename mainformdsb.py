@@ -69,5 +69,8 @@ class MainFormDsb(OrsAbstractWindow):
             annotation
         )
 
+        self.radius_worker.progress_updated.connect(self.update_status_label)
+        self.radius_worker.finished.connect(lambda: self.ui.btn_process_head_radii.setEnabled(True))
+
         self.radius_worker.start()
         self.ui.btn_process_head_radii.setEnabled(False)  # Disable it until the worker is done
