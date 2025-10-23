@@ -9,8 +9,8 @@ from . import skeleton_helper
 from . import geometry as geom
 from . import spine_analysis as sa
 
-
 from . import meshhelper
+import pickle
 
 
 class PreprocessingWorker(QThread):
@@ -37,28 +37,44 @@ class PreprocessingWorker(QThread):
             skeleton = meshhelper.skeletonize_mesh(tm_mesh)
 
             self.update_label.emit("Pruning branches")
+            print("pruning branches")
             spine_skeletons, radii = spine_detection.get_branch_polylines_by_length(
-                skeleton, min_length=7, max_length=10000, min_nodes=5, max_nodes=math.inf,
+                skeleton, min_length=50, max_length=10000, min_nodes=5, max_nodes=math.inf,
                 radius_threshold=math.inf
             )
+
+            with open("F:/spine_skeleton.pickle", "wb") as f:
+                pickle.dump(skeleton, f)
+            tm_mesh.export("F:/dendrite_mesh_output.glb")
 
             total_length = min(len(spine_skeletons), len(radii))
             head_radii = []
             head_center_points = []
+
+            print("starting to iterate")
+            for idx, (spine_skeleton, spine_radii) in enumerate(zip(spine_skeletons, radii)):
+                length = geom.accumulate(spine_skeleton)
+                print(idx, length)
+
+
+            print("spine heads")
             for idx, (spine_skeleton, spine_radii) in enumerate(zip(spine_skeletons, radii)):
                 self.update_label.emit(f"Computing head radius for {idx + 1}/{total_length} spines")
-                spacing = 3  # nm
+                spacing = 5  # nm
 
+                print("Computing radii")
                 points_tangents, radii_tangents = skeleton_helper.get_radius_polyline(
-                    spine_skeleton[::-1], tm_mesh, n_rays=200,
+                    spine_skeleton[::-1], tm_mesh, n_rays=140,
                     aggregate='mean', projection='tangents', path_interpolation_spacing=spacing,
                     fallback=None
                 )
 
                 print(f"Spine {idx} has {len(points_tangents)} points for head radius computation")
 
+                print("Accumulating")
                 cumulative_points = geom.accumulate(points_tangents)
 
+                print("Finding head radius")
                 radius, head_point_3d = sa.find_head_radius(
                     spine_skeleton[::-1],
                     tm_mesh,
