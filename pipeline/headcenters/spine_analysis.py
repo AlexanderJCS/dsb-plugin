@@ -108,15 +108,14 @@ def spine_head_center_idx(x_values: np.ndarray, y_values: np.ndarray) -> int | N
     return None
 
 
-def find_head_radius(polyline: np.ndarray, dendrite_mesh, cumulative_len: np.ndarray, radii_tangents, smoothness: float = 0.004, filename: Optional[str] = None) -> tuple[float, np.ndarray]:
+def find_head_point(polyline: np.ndarray, cumulative_len: np.ndarray, radii_tangents, smoothness: float = 0.004, filename: Optional[str] = None) -> tuple[float, np.ndarray]:
     """
     Finds the head radius of the dendritic spine.
 
-    :param polyline: The polyline describing the dendritic spine
-    :param dendrite_mesh: The mesh of the dendrite
-    :param cumulative_len: The cumulative length of the dendrite
-    :param radii_tangents: The radii of the dendritic spine
-    :param smoothness: The parameter to smooth the data to
+    :param polyline: The polyline describing the dendritic spine.
+    :param cumulative_len: The cumulative length of the dendrite.
+    :param radii_tangents: The radii of the dendritic spine.
+    :param smoothness: The parameter to smooth the data to.
     :param filename: The filename to save the results raw, smoothed data to. Used for spine classification. None if not saved.
     """
 
@@ -152,4 +151,4 @@ def find_head_radius(polyline: np.ndarray, dendrite_mesh, cumulative_len: np.nda
     # plt.show()
 
     # head_radius_spheres should be the radii_spheres radius at distance head_point_1d
-    return skeleton_helper.get_radius_point(head_point_3d, dendrite_mesh, n_rays=500, aggregate="mean", projection="sphere")[0], head_point_3d
+    return head_point_3d

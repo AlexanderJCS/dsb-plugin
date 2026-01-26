@@ -1,8 +1,11 @@
 import math
+import traceback
 
 import ORSModel
 from OrsHelpers.primitivehelper import PrimitiveHelper
 from PyQt6.QtCore import QThread, pyqtSignal
+
+from OrsLibraries.logger import Logger
 
 from . import spine_detection
 from . import skeleton_helper
@@ -10,7 +13,8 @@ from . import geometry as geom
 from . import spine_analysis as sa
 
 from . import meshhelper
-import pickle
+
+log = Logger(__file__)
 
 
 class PreprocessingWorker(QThread):
@@ -26,6 +30,8 @@ class PreprocessingWorker(QThread):
     def run(self):
         try:
             self.update_label.emit("Converting ROI to Mesh")
+            raise ValueError("Test error")
+
             ors_mesh = meshhelper.roi_to_ors_mesh(self.channel, self.selected_roi, smooth=True)
             ors_mesh.setTitle("DSB Dendrite Mesh")
             ors_mesh.setIsRepresentable(True)
@@ -37,53 +43,46 @@ class PreprocessingWorker(QThread):
             skeleton = meshhelper.skeletonize_mesh(tm_mesh)
 
             self.update_label.emit("Pruning branches")
-            print("pruning branches")
+            log.info("Pruning skeleton branches")
             spine_skeletons, radii = spine_detection.get_branch_polylines_by_length(
                 skeleton, min_length=50, max_length=10000, min_nodes=5, max_nodes=math.inf,
                 radius_threshold=math.inf, angle_threshold=80
             )
 
             total_length = min(len(spine_skeletons), len(radii))
-            head_radii = []
             head_center_points = []
 
-            print("starting to iterate")
-            for idx, (spine_skeleton, spine_radii) in enumerate(zip(spine_skeletons, radii)):
-                length = geom.accumulate(spine_skeleton)
-                print(idx, length)
-
-
-            print("spine heads")
+            log.info("Iterating over spines to compute radii as a function of path length")
             for idx, (spine_skeleton, spine_radii) in enumerate(zip(spine_skeletons, radii)):
                 self.update_label.emit(f"Computing head radius for {idx + 1}/{total_length} spines")
                 spacing = 5  # nm
 
-                print("Computing radii")
+                log.info(f"Spine {idx}: computing radii")
                 points_tangents, radii_tangents = skeleton_helper.get_radius_polyline(
                     spine_skeleton[::-1], tm_mesh, n_rays=140,
                     aggregate='mean', projection='tangents', path_interpolation_spacing=spacing,
                     fallback=None
                 )
 
-                print(f"Spine {idx} has {len(points_tangents)} points for head radius computation")
+                log.info(f"Spine {idx}: {len(points_tangents)} points for head radius computation")
 
-                print("Accumulating")
                 cumulative_points = geom.accumulate(points_tangents)
 
-                print("Finding head radius")
-                radius, head_point_3d = sa.find_head_radius(
+                log.info(f"Spine {idx}: Computing head point")
+                head_point_3d = sa.find_head_point(
                     spine_skeleton[::-1],
-                    tm_mesh,
                     cumulative_points,
                     radii_tangents,
                     0.004,
                     # f"out/headradius/spine_graph/spine_head_{idx}.npz"
                     None
                 )
-                head_radii.append(radius)
                 head_center_points.append(head_point_3d)
 
+                log.info(f"Spine {idx}: Head point at {head_point_3d}")
+
             self.update_label.emit("Creating head centers annotation")
+            log.info("Creating head centers annotation")
             heads_annotation: ORSModel.ors.Annotation = PrimitiveHelper.createPrimitive(
                 primitiveClass=ORSModel.ors.VisualPoints,
                 aLayoutName="head_centers_annotation",
@@ -94,12 +93,13 @@ class PreprocessingWorker(QThread):
 
             for head_point in head_center_points:
                 head_point /= 1e9  # nm -> m
-
                 heads_annotation.addControlPoint(ORSModel.ors.Vector3(*head_point), 0, None)
 
             heads_annotation.publish()
             self.update_label.emit("Finished")
 
-        except Exception as e:
-            self.update_label.emit(f"An unexpected error occurred while preprocessing")
+        except Exception:
+            self.update_label.emit(f"An error occurred while processing. Check Dragonfly logs.")
+            log.fatal("An error occurred in PreprocessingWorker:")
+            log.fatal(traceback.format_exc())
    
