@@ -25,7 +25,12 @@ def compute_initial_mesh(impl: OrsSurfaceDetermination, model: Channel, sampling
         print("Sampling must be at least 1")
         return
 
-    excludeVoids = True  # TODO: tune this
+    # Remove holes in mask because it will create voids that will mess up skeletonization
+    mask_copy = mask.copy()
+    mask_copy.fillInnerHoles(0, False)
+
+    # Also exclude voids from the channel data
+    excludeVoids = True
 
     inputChannel = model
     # check if we need to denoise the data
@@ -48,7 +53,7 @@ def compute_initial_mesh(impl: OrsSurfaceDetermination, model: Channel, sampling
 
     # are we using a ROI mask ? must be checked and a valid ROI must be selected
     isovalue = 60.0  # this is a magic number from Dragonfly's source code. I dare not touch it.
-    contourMesh = impl.generateContourMeshFromAROI(mask, isovalue,
+    contourMesh = impl.generateContourMeshFromAROI(mask_copy, isovalue,
                                                    samplingX,
                                                    samplingY, samplingZ)
     if contourMesh is not None:
@@ -98,6 +103,9 @@ def compute_initial_mesh(impl: OrsSurfaceDetermination, model: Channel, sampling
             print("Smoothing")
             contourMesh.laplacianSmooth(1, 0, 0.9)
         contourMesh.setIsRepresentable(False)
+
+    # Free mask copy
+    mask_copy.deleteObject()
 
     return contourMesh
 

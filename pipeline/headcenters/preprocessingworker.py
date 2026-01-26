@@ -30,7 +30,6 @@ class PreprocessingWorker(QThread):
     def run(self):
         try:
             self.update_label.emit("Converting ROI to Mesh")
-            raise ValueError("Test error")
 
             ors_mesh = meshhelper.roi_to_ors_mesh(self.channel, self.selected_roi, smooth=True)
             ors_mesh.setTitle("DSB Dendrite Mesh")
