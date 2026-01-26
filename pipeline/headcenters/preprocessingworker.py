@@ -40,12 +40,8 @@ class PreprocessingWorker(QThread):
             print("pruning branches")
             spine_skeletons, radii = spine_detection.get_branch_polylines_by_length(
                 skeleton, min_length=50, max_length=10000, min_nodes=5, max_nodes=math.inf,
-                radius_threshold=math.inf
+                radius_threshold=math.inf, angle_threshold=80
             )
-
-            with open("F:/spine_skeleton.pickle", "wb") as f:
-                pickle.dump(skeleton, f)
-            tm_mesh.export("F:/dendrite_mesh_output.glb")
 
             total_length = min(len(spine_skeletons), len(radii))
             head_radii = []
@@ -106,5 +102,4 @@ class PreprocessingWorker(QThread):
 
         except Exception as e:
             self.update_label.emit(f"An unexpected error occurred while preprocessing")
-            raise e
    
