@@ -26,7 +26,7 @@ class HeadRadiusWorker(QThread):
             tm_mesh = meshhelper.ors_to_trimesh(self.mesh)
             points = meshhelper.get_points_from_annotation(self.annotation)
 
-            csv_data = "Point Index,Annotation Label,Radius (nm)\n"
+            csv_data = "Point Index,Annotation Label,Radius (nm),Point X, Point Y, Point Z\n"
 
             total_points = len(points)
             self.progress_updated.emit(f"Processing {total_points} points...")
@@ -38,7 +38,7 @@ class HeadRadiusWorker(QThread):
                 radius = skeleton_helper.get_radius_point(
                     point, tm_mesh, n_rays=500, aggregate="mean", projection="sphere")[0]
                 annotation_label = self.annotation.getControlPointCaptionAtIndex(i, 0)
-                csv_data += f"{i+1},{annotation_label},{radius}\n"
+                csv_data += f"{i+1},{annotation_label},{radius},{point[0]},{point[1]},{point[2]}\n"
 
             self.progress_updated.emit("Writing results to file...")
             with open(self.out_path, "w") as f:
