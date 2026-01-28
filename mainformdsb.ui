@@ -67,6 +67,16 @@
            </property>
           </widget>
          </item>
+         <item row="1" column="0">
+          <widget class="QPushButton" name="btn_select_dsb_output">
+           <property name="text">
+            <string>Select DSB Output</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QLineEdit" name="line_dsb_output"/>
+         </item>
         </layout>
        </item>
        <item>

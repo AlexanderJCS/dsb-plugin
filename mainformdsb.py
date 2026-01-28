@@ -5,6 +5,7 @@ import ORSModel
 from OrsLibraries.workingcontext import WorkingContext
 from ORSServiceClass.windowclasses.orsabstractwindow import OrsAbstractWindow
 from PyQt6.QtCore import pyqtSlot
+from PyQt6.QtWidgets import QFileDialog
 
 from .pipeline.headcenters.headradius_worker import HeadRadiusWorker
 from .pipeline.headcenters.preprocessingworker import PreprocessingWorker
@@ -26,6 +27,36 @@ class MainFormDsb(OrsAbstractWindow):
 
     def update_status_label(self, text: str):
         self.ui.lbl_status.setText(text)
+
+    def dialog_save_filename(self, extension: str) -> str:
+        """
+        Prompts the user to select a filename to save to and ensures the correct extension is used.
+        :param extension: The desired file extension (without dot). E.g.: "csv", "txt"
+        :return: The selected filename with the correct extension, or an empty string if canceled.
+        """
+
+        filename, _ = QFileDialog.getSaveFileName(
+            self,
+            "Select Output File",
+            "",
+            f"{extension.upper()} files (*.{extension});;All Files (*)"
+        )
+
+        if not filename:
+            return filename
+
+        if not filename.lower().endswith(f".{extension.lower()}"):
+            filename += f".{extension}"
+
+        return filename
+
+    @pyqtSlot()
+    def on_btn_select_csv_output_clicked(self):
+        self.ui.line_csv_output.setText(self.dialog_save_filename("csv"))
+
+    @pyqtSlot()
+    def on_btn_select_dsb_output_clicked(self):
+        self.ui.line_dsb_output.setText(self.dialog_save_filename("dsb"))
 
     @pyqtSlot()
     def on_btn_preprocessing_run_clicked(self):

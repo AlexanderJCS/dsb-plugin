@@ -43,6 +43,8 @@ class PreprocessingWorker(QThread):
             total_length = min(len(spine_skeletons), len(radii))
             head_center_points = []
 
+            skipped_spines_count = 0
+
             log.info("Iterating over spines to compute radii as a function of path length")
             for idx, (spine_skeleton, spine_radii) in enumerate(zip(spine_skeletons, radii)):
                 try:
@@ -76,6 +78,7 @@ class PreprocessingWorker(QThread):
                 except Exception:
                     log.error(f"An error occurred while processing spine {idx}. Skipping to next spine.")
                     log.error(traceback.format_exc())
+                    skipped_spines_count += 1
 
             self.update_label.emit("Creating head centers annotation")
             log.info("Creating head centers annotation")
@@ -92,10 +95,15 @@ class PreprocessingWorker(QThread):
                 heads_annotation.addControlPoint(ORSModel.ors.Vector3(*head_point), 0, None)
 
             heads_annotation.publish()
-            self.update_label.emit("Finished")
+
+
+            self.update_label.emit(f"Finished. Skipped {skipped_spines_count} spine{'s' if skipped_spines_count != 1 else ''}.")
 
         except Exception:
             self.update_label.emit(f"An error occurred while processing. Check Dragonfly logs.")
             log.fatal("An error occurred in PreprocessingWorker:")
             log.fatal(traceback.format_exc())
+        finally:
+            self.finished.emit()
+
    
