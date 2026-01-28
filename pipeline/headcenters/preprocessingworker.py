@@ -107,7 +107,7 @@ class PreprocessingWorker(QThread):
             )
             payload.pld_save(pld, self.save_path)
 
-            self.update_label.emit(f"Finished. Skipped {skipped_spines_count} spine{'s' if skipped_spines_count != 1 else ''}.")
+            self.update_label.emit(f"Finished. Found {len(head_center_points)} candidates. Skipped {skipped_spines_count} candidate{'s' if skipped_spines_count != 1 else ''}.")
 
         except Exception:
             self.update_label.emit(f"An error occurred while processing. Check Dragonfly logs.")
