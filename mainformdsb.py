@@ -16,10 +16,9 @@ class MainFormDsb(OrsAbstractWindow):
         super().__init__(implementation, parent)
         self.ui = Ui_MainFormDsb()
         self.ui.setupUi(self)
-        self.ui.ccb_dendrite_roi_chooser.setManagedClass([ORSModel.ROI])
-        self.ui.ccb_channel_chooser.setManagedClass([ORSModel.Channel])
+        self.ui.ccb_dendrite_mesh_preprocessing.setManagedClass([ORSModel.FaceVertexMesh])
         self.ui.ccb_head_points.setManagedClass([ORSModel.Annotation])
-        self.ui.ccb_dragonfly_mesh.setManagedClass([ORSModel.FaceVertexMesh])
+        self.ui.ccb_dendrite_mesh_postprocessing.setManagedClass([ORSModel.FaceVertexMesh])
 
         WorkingContext.registerOrsWidget('DSB_efd060071a1711f0b40cf83441a96bd5', implementation, 'MainFormDsb', self)
         self.preprocessing_worker: Optional[PreprocessingWorker] = None
@@ -30,14 +29,13 @@ class MainFormDsb(OrsAbstractWindow):
 
     @pyqtSlot()
     def on_btn_preprocessing_run_clicked(self):
-        selected_roi = ORSModel.orsObj(self.ui.ccb_dendrite_roi_chooser.getSelectedGuid())
+        selected_roi = ORSModel.orsObj(self.ui.ccb_dendrite_mesh_preprocessing.getSelectedGuid())
         if selected_roi is None:
             self.ui.lbl_status.setText("No ROI selected")
             return
 
         self.preprocessing_worker = PreprocessingWorker(
-            ORSModel.orsObj(self.ui.ccb_channel_chooser.getSelectedGuid()),
-            selected_roi
+            ORSModel.orsObj(self.ui.ccb_dendrite_mesh_preprocessing.getSelectedGuid())
         )
 
         self.preprocessing_worker.update_label.connect(self.update_status_label)
@@ -48,7 +46,7 @@ class MainFormDsb(OrsAbstractWindow):
 
     @pyqtSlot()
     def on_btn_process_head_radii_clicked(self):
-        dragonfly_mesh = ORSModel.orsObj(self.ui.ccb_dragonfly_mesh.getSelectedGuid())
+        dragonfly_mesh = ORSModel.orsObj(self.ui.ccb_dendrite_mesh_postprocessing.getSelectedGuid())
         if dragonfly_mesh is None:
             self.ui.lbl_status.setText("No Dragonfly mesh selected")
             return

@@ -2,10 +2,8 @@ import numpy as np
 import skeletor as sk
 import trimesh
 
-from ORSModel.ors import ROI, FaceVertexMesh, Channel, Annotation
+from ORSModel.ors import FaceVertexMesh, Annotation
 import ORSModel
-
-from . import surface_determination
 
 
 def get_points_from_annotation(ann: Annotation):
@@ -27,24 +25,6 @@ def ors_to_trimesh(ors_mesh: FaceVertexMesh) -> trimesh.Trimesh:
     edges = ors_mesh.getEdges(0).getNDArray().reshape(-1, 3)
 
     return trimesh.Trimesh(vertices=vertices, faces=edges)
-
-
-def roi_to_ors_mesh(channel: Channel, mask: ROI, smooth=True) -> FaceVertexMesh:
-    """
-    Does all the headcenters required to convert a Dragonfly ROI to a ORS mesh, optionally with smoothing applied.
-    :return: The Trimesh mesh
-    """
-
-    dragonfly_mesh = surface_determination.compute_mesh(channel, 1, 2, 1, mask, 60.0, smoothing=False)
-
-    if 0 in (dragonfly_mesh.getVertexCount(0), dragonfly_mesh.getEdgeCount(0)):
-        return dragonfly_mesh
-
-    # Smooth the mesh
-    if smooth:
-        dragonfly_mesh.laplacianSmooth(1, 0, 0.9)
-
-    return dragonfly_mesh
 
 
 def mesh_to_ors(mesh: trimesh.Trimesh) -> FaceVertexMesh:

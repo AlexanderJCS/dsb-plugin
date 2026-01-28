@@ -21,22 +21,14 @@ class PreprocessingWorker(QThread):
     update_label: pyqtSignal = pyqtSignal(str)
     finished: pyqtSignal = pyqtSignal()
 
-    def __init__(self, channel: ORSModel.ors.Channel, selected_roi: ORSModel.ors.ROI):
+    def __init__(self, mesh: ORSModel.ors.FaceVertexMesh):
         super().__init__()
 
-        self.selected_roi = selected_roi
-        self.channel = channel
+        self.mesh = mesh
 
     def run(self):
         try:
-            self.update_label.emit("Converting ROI to Mesh")
-
-            ors_mesh = meshhelper.roi_to_ors_mesh(self.channel, self.selected_roi, smooth=True)
-            ors_mesh.setTitle("DSB Dendrite Mesh")
-            ors_mesh.setIsRepresentable(True)
-            ors_mesh.publish()
-
-            tm_mesh = meshhelper.ors_to_trimesh(ors_mesh)
+            tm_mesh = meshhelper.ors_to_trimesh(self.mesh)
 
             self.update_label.emit("Skeletonizing Mesh")
             skeleton = meshhelper.skeletonize_mesh(tm_mesh)
