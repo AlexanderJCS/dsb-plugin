@@ -9,13 +9,8 @@ from PyQt6.QtCore import QThread, pyqtSignal
 
 from OrsLibraries.logger import Logger
 
-from . import spine_detection
-from . import skeleton_helper
-from . import geometry as geom
-from . import spine_analysis as sa
-
-from . import meshhelper
-from .. import payload
+from Plugins.DSB_efd060071a1711f0b40cf83441a96bd5.pipeline import payload, meshhelper, skeleton_helper, \
+    spine_analysis as sa, geometry as geom, spine_detection
 
 log = Logger(__file__)
 

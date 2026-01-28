@@ -7,8 +7,7 @@ from sklearn.linear_model import Ridge
 from scipy.signal import butter, filtfilt
 import numpy as np
 
-from . import geometry as geom
-from . import skeleton_helper
+from Plugins.DSB_efd060071a1711f0b40cf83441a96bd5.pipeline import geometry as geom
 
 
 def smooth(x, y, x_points: np.ndarray | int | None = None, degree=15, alpha=0.01) -> tuple[np.ndarray, np.ndarray]:

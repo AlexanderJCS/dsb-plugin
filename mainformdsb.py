@@ -7,8 +7,8 @@ from ORSServiceClass.windowclasses.orsabstractwindow import OrsAbstractWindow
 from PyQt6.QtCore import pyqtSlot
 from PyQt6.QtWidgets import QFileDialog
 
-from .pipeline.headcenters.headradius_worker import HeadRadiusWorker
-from .pipeline.headcenters.preprocessingworker import PreprocessingWorker
+from Plugins.DSB_efd060071a1711f0b40cf83441a96bd5.pipeline.headradius_worker import HeadRadiusWorker
+from Plugins.DSB_efd060071a1711f0b40cf83441a96bd5.pipeline.preprocessingworker import PreprocessingWorker
 from .ui_mainformdsb import Ui_MainFormDsb
 
 
