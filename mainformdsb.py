@@ -65,8 +65,13 @@ class MainFormDsb(OrsAbstractWindow):
             self.ui.lbl_status.setText("No ROI selected")
             return
 
+        if self.ui.line_dsb_output.text() == "":
+            self.ui.lbl_status.setText("No output path specified")
+            return
+
         self.preprocessing_worker = PreprocessingWorker(
-            ORSModel.orsObj(self.ui.ccb_dendrite_mesh_preprocessing.getSelectedGuid())
+            ORSModel.orsObj(self.ui.ccb_dendrite_mesh_preprocessing.getSelectedGuid()),
+            self.ui.line_dsb_output.text()
         )
 
         self.preprocessing_worker.update_label.connect(self.update_status_label)

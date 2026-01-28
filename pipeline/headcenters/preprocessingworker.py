@@ -1,6 +1,8 @@
 import math
 import traceback
 
+import numpy as np
+
 import ORSModel
 from OrsHelpers.primitivehelper import PrimitiveHelper
 from PyQt6.QtCore import QThread, pyqtSignal
@@ -13,6 +15,7 @@ from . import geometry as geom
 from . import spine_analysis as sa
 
 from . import meshhelper
+from .. import payload
 
 log = Logger(__file__)
 
@@ -21,10 +24,11 @@ class PreprocessingWorker(QThread):
     update_label: pyqtSignal = pyqtSignal(str)
     finished: pyqtSignal = pyqtSignal()
 
-    def __init__(self, mesh: ORSModel.ors.FaceVertexMesh):
+    def __init__(self, mesh: ORSModel.ors.FaceVertexMesh, save_path: str):
         super().__init__()
 
         self.mesh = mesh
+        self.save_path = save_path
 
     def run(self):
         try:
@@ -96,6 +100,12 @@ class PreprocessingWorker(QThread):
 
             heads_annotation.publish()
 
+            self.update_label.emit("Saving DSB file")
+            pld = payload.Payload(
+                dendrite_mesh=tm_mesh,
+                head_centers=np.array(head_center_points),
+            )
+            payload.pld_save(pld, self.save_path)
 
             self.update_label.emit(f"Finished. Skipped {skipped_spines_count} spine{'s' if skipped_spines_count != 1 else ''}.")
 
