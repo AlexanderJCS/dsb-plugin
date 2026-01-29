@@ -1,6 +1,6 @@
 import numpy as np
 
-from Plugins.DSB_efd060071a1711f0b40cf83441a96bd5.pipeline import utils
+from . import utils
 
 
 def point_and_tangent_along_polyline(polyline, dist_along_skel) -> tuple[np.ndarray, np.ndarray]:

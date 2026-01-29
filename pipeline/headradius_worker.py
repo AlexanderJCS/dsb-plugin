@@ -1,7 +1,7 @@
 import ORSModel
 from PyQt6.QtCore import QThread, pyqtSignal
 
-from Plugins.DSB_efd060071a1711f0b40cf83441a96bd5.pipeline import meshhelper, skeleton_helper
+from . import meshhelper, skeleton_helper
 
 
 class HeadRadiusWorker(QThread):
