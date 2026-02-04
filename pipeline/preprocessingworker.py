@@ -30,6 +30,13 @@ class PreprocessingWorker(QThread):
         self.save_path = save_path
 
     def run(self):
+        datapoint_spacing = 5  # nm, datapoint spacing along a branch for tangential radius computation. used to find head center
+
+        # min branch length needs to be 15 * datapoint_spacing because we need at least 14 points to compute head center
+        # This is because the scipy filtfilt function used in spine_analysis.py requires a minimum number of points to
+        # apply the lowpass filter correctly.
+        min_branch_length = datapoint_spacing * 15
+
         try:
             tm_mesh = meshhelper.ors_to_trimesh(self.mesh)
 
@@ -39,7 +46,7 @@ class PreprocessingWorker(QThread):
             self.update_label.emit("Pruning branches")
             log.info("Pruning skeleton branches")
             spine_skeletons, radii = spine_detection.get_branch_polylines_by_length(
-                skeleton, min_length=50, max_length=10000, min_nodes=5, max_nodes=math.inf,
+                skeleton, min_length=min_branch_length, max_length=10000, min_nodes=5, max_nodes=math.inf,
                 radius_threshold=math.inf, angle_threshold=80
             )
 
@@ -52,12 +59,11 @@ class PreprocessingWorker(QThread):
             for idx, (spine_skeleton, spine_radii) in enumerate(zip(spine_skeletons, radii)):
                 try:
                     self.update_label.emit(f"Computing head radius for {idx + 1}/{total_length} spines")
-                    spacing = 5  # nm
 
                     log.info(f"Spine {idx}: computing radii")
                     points_tangents, radii_tangents = skeleton_helper.get_radius_polyline(
                         spine_skeleton[::-1], tm_mesh, n_rays=140,
-                        aggregate='mean', projection='tangents', path_interpolation_spacing=spacing,
+                        aggregate='mean', projection='tangents', path_interpolation_spacing=datapoint_spacing,
                         fallback=None
                     )
 
