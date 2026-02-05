@@ -23,11 +23,19 @@ class PreprocessingWorker(QThread):
     update_label: pyqtSignal = pyqtSignal(str)
     finished: pyqtSignal = pyqtSignal()
 
-    def __init__(self, mesh: ORSModel.ors.FaceVertexMesh, save_path: str):
+    def __init__(
+            self,
+            mesh: ORSModel.ors.FaceVertexMesh,
+            annotation: ORSModel.ors.Annotation | None,
+            multiroi: ORSModel.ors.MultiROI | None,
+            save_path: str
+    ):
         super().__init__()
 
         self.mesh = mesh
         self.save_path = save_path
+        self.psd_annotation = annotation
+        self.psd_multiroi = multiroi
 
     def run(self):
         datapoint_spacing = 5  # nm, datapoint spacing along a branch for tangential radius computation. used to find head center
@@ -109,6 +117,8 @@ class PreprocessingWorker(QThread):
             pld = payload.Payload(
                 dendrite_mesh=tm_mesh,
                 head_centers=np.array(head_center_points),
+                annotation=meshhelper.get_points_from_annotation(self.psd_annotation),
+                psds=meshhelper.multiroi_to_mesh(self.psd_multiroi)
             )
             payload.pld_save(pld, self.save_path)
 

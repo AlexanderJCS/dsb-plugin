@@ -2,7 +2,7 @@ import numpy as np
 import skeletor as sk
 import trimesh
 
-from ORSModel.ors import FaceVertexMesh, Annotation
+from ORSModel.ors import FaceVertexMesh, Annotation, ROI, MultiROI
 import ORSModel
 
 
@@ -25,6 +25,33 @@ def ors_to_trimesh(ors_mesh: FaceVertexMesh) -> trimesh.Trimesh:
     edges = ors_mesh.getEdges(0).getNDArray().reshape(-1, 3)
 
     return trimesh.Trimesh(vertices=vertices, faces=edges)
+
+
+def roi_to_cubic_mesh(roi: ROI):
+    dragonfly_mesh = roi.getAsCubicMesh(True, None, None)
+    mesh = ors_to_trimesh(dragonfly_mesh)
+    dragonfly_mesh.deleteObjectAndAllItsChildren()
+
+    return mesh
+
+
+def multiroi_to_mesh(multiroi: ORSModel.MultiROI) -> trimesh.Trimesh:
+    """
+    Converts a Dragonfly MultiROI to a trimesh mesh.
+    :param multiroi: The MultiROI to convert
+    :return: The trimesh mesh
+    """
+
+    meshes = []
+
+    for label in range(1, multiroi.getLabelCount() + 1):
+        copy_roi: ORSModel.ors.ROI = ORSModel.ors.ROI()
+        copy_roi.copyShapeFromStructuredGrid(multiroi)
+        multiroi.addToVolumeROI(copy_roi, label)
+
+        meshes.append(roi_to_cubic_mesh(copy_roi, True, False))
+
+    return trimesh.util.concatenate(meshes, trimesh.Trimesh())
 
 
 def mesh_to_ors(mesh: trimesh.Trimesh) -> FaceVertexMesh:

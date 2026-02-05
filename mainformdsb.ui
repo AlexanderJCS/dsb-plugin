@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>418</width>
-    <height>210</height>
+    <height>264</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -67,15 +67,61 @@
            </property>
           </widget>
          </item>
-         <item row="1" column="0">
+         <item row="3" column="0">
           <widget class="QPushButton" name="btn_select_dsb_output">
            <property name="text">
             <string>Select DSB Output</string>
            </property>
           </widget>
          </item>
-         <item row="1" column="1">
+         <item row="3" column="1">
           <widget class="QLineEdit" name="line_dsb_output"/>
+         </item>
+         <item row="1" column="0">
+          <widget class="QCheckBox" name="chk_psd_annotation">
+           <property name="text">
+            <string>PSD Annotation</string>
+           </property>
+          </widget>
+          <item row="1" column="1">
+          <widget class="OrsObjectClassComboBox" name="ccb_psd_annotation" native="true">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>26</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>20</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+         </item>
+         <item row="2" column="0">
+          <widget class="QCheckBox" name="chk_psd_multiroi">
+           <property name="text">
+            <string>PSD MultiROI</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="OrsObjectClassComboBox" name="ccb_psd_multiroi" native="true">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>26</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>20</height>
+            </size>
+           </property>
+          </widget>
          </item>
         </layout>
        </item>

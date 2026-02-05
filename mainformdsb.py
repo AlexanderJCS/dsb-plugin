@@ -20,10 +20,27 @@ class MainFormDsb(OrsAbstractWindow):
         self.ui.ccb_dendrite_mesh_preprocessing.setManagedClass([ORSModel.FaceVertexMesh])
         self.ui.ccb_head_points.setManagedClass([ORSModel.Annotation])
         self.ui.ccb_dendrite_mesh_postprocessing.setManagedClass([ORSModel.FaceVertexMesh])
+        self.ui.ccb_psd_annotation.setManagedClass([ORSModel.Annotation])
+        self.ui.ccb_psd_multiroi.setManagedClass([ORSModel.MultiROI])
+
+        self.ui.ccb_psd_annotation.setEnabled(False)
+        self.ui.ccb_psd_multiroi.setEnabled(False)
+
+        # I have to set these manually for some reason
+        self.ui.chk_psd_annotation.stateChanged.connect(self.on_chk_psd_annotation_stateChanged)
+        self.ui.chk_psd_multiroi.stateChanged.connect(self.on_chk_psd_multiroi_stateChanged)
 
         WorkingContext.registerOrsWidget('DSB_efd060071a1711f0b40cf83441a96bd5', implementation, 'MainFormDsb', self)
         self.preprocessing_worker: Optional[PreprocessingWorker] = None
         self.radius_worker: Optional[HeadRadiusWorker] = None
+
+    @pyqtSlot()
+    def on_chk_psd_annotation_stateChanged(self):
+        self.ui.ccb_psd_annotation.setEnabled(self.ui.chk_psd_annotation.isChecked())
+
+    @pyqtSlot()
+    def on_chk_psd_multiroi_stateChanged(self):
+        self.ui.ccb_psd_multiroi.setEnabled(self.ui.chk_psd_multiroi.isChecked())
 
     def update_status_label(self, text: str):
         self.ui.lbl_status.setText(text)
@@ -58,6 +75,16 @@ class MainFormDsb(OrsAbstractWindow):
     def on_btn_select_dsb_output_clicked(self):
         self.ui.line_dsb_output.setText(self.dialog_save_filename("dsb"))
 
+    def get_psd_multiroi(self) -> Optional[ORSModel.ors.MultiROI]:
+        if self.ui.chk_psd_multiroi.isChecked():
+            return ORSModel.orsObj(self.ui.ccb_psd_multiroi.getSelectedGuid())
+        return None
+
+    def get_psd_annotation(self) -> Optional[ORSModel.ors.Annotation]:
+        if self.ui.chk_psd_annotation.isChecked():
+            return ORSModel.orsObj(self.ui.ccb_psd_annotation.getSelectedGuid())
+        return None
+
     @pyqtSlot()
     def on_btn_preprocessing_run_clicked(self):
         selected_roi = ORSModel.orsObj(self.ui.ccb_dendrite_mesh_preprocessing.getSelectedGuid())
@@ -71,6 +98,8 @@ class MainFormDsb(OrsAbstractWindow):
 
         self.preprocessing_worker = PreprocessingWorker(
             ORSModel.orsObj(self.ui.ccb_dendrite_mesh_preprocessing.getSelectedGuid()),
+            self.get_psd_annotation(),
+            self.get_psd_multiroi(),
             self.ui.line_dsb_output.text()
         )
 
