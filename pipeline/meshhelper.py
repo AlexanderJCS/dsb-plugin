@@ -35,7 +35,7 @@ def roi_to_cubic_mesh(roi: ROI):
     return mesh
 
 
-def multiroi_to_mesh(multiroi: ORSModel.MultiROI) -> trimesh.Trimesh:
+def multiroi_to_mesh(multiroi: ORSModel.ors.MultiROI) -> trimesh.Trimesh:
     """
     Converts a Dragonfly MultiROI to a trimesh mesh.
     :param multiroi: The MultiROI to convert
@@ -49,7 +49,7 @@ def multiroi_to_mesh(multiroi: ORSModel.MultiROI) -> trimesh.Trimesh:
         copy_roi.copyShapeFromStructuredGrid(multiroi)
         multiroi.addToVolumeROI(copy_roi, label)
 
-        meshes.append(roi_to_cubic_mesh(copy_roi, True, False))
+        meshes.append(roi_to_cubic_mesh(copy_roi))
 
     return trimesh.util.concatenate(meshes, trimesh.Trimesh())
 
