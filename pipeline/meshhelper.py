@@ -51,6 +51,8 @@ def multiroi_to_mesh(multiroi: ORSModel.ors.MultiROI) -> trimesh.Trimesh:
 
         meshes.append(roi_to_cubic_mesh(copy_roi))
 
+        copy_roi.deleteObjectAndAllItsChildren()
+
     return trimesh.util.concatenate(meshes, trimesh.Trimesh())
 
 
