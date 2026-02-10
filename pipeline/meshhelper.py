@@ -15,6 +15,50 @@ def get_points_from_annotation(ann: Annotation):
     return points
 
 
+def get_labels_from_annotation(ann: Annotation):
+    labels = []
+    for i in range(ann.getControlPointCount(0)):
+        labels.append(ann.getControlPointCaptionAtIndex(i, 0))
+
+    return labels
+
+
+def get_point_label_pairs_from_annotation(ann: Annotation):
+    labels = get_labels_from_annotation(ann)
+    points = get_points_from_annotation(ann)
+
+    return list(zip(points, labels))
+
+
+def get_multiroi_names(multiroi: MultiROI) -> list[str]:
+    return [multiroi.getLabelName(label) for label in range(1, multiroi.getLabelCount() + 1)]
+
+
+def get_multiroi_locations(multiroi: MultiROI) -> list[np.ndarray]:
+    locations = []
+    for label in range(1, multiroi.getLabelCount() + 1):
+        # Copy the ROI
+        copy_roi: ORSModel.ors.ROI = ORSModel.ors.ROI()
+        copy_roi.copyShapeFromStructuredGrid(multiroi)
+        multiroi.addToVolumeROI(copy_roi, label)
+
+        # Get the center of mass
+        center = copy_roi.getCenterOfMass(0)
+        locations.append(np.array([center.getX(), center.getY(), center.getZ()], dtype=np.float64) * 1e9)  # m -> nm
+
+        # Clean up
+        copy_roi.deleteObjectAndAllItsChildren()
+
+    return locations
+
+
+def get_point_name_pairs_from_multiroi(multiroi: MultiROI) -> list[tuple[np.ndarray, str]]:
+    names = get_multiroi_names(multiroi)
+    locations = get_multiroi_locations(multiroi)
+
+    return list(zip(locations, names))
+
+
 def ors_to_trimesh(ors_mesh: FaceVertexMesh) -> trimesh.Trimesh:
     """
     Converts a Dragonfly ORS mesh to a trimesh mesh.

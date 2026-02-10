@@ -114,11 +114,19 @@ class PreprocessingWorker(QThread):
             heads_annotation.publish()
 
             self.update_label.emit("Saving DSB file")
+
+            # Create annotations with the annotated points but also the PSD points/names
+            annotation = []
+            if self.psd_annotation is not None:
+                annotation.extend(meshhelper.get_point_label_pairs_from_annotation(self.psd_annotation))
+            if self.psd_multiroi is not None:
+                annotation.extend(meshhelper.get_point_name_pairs_from_multiroi(self.psd_multiroi))
+
             pld = payload.Payload(
                 dendrite_mesh=tm_mesh,
                 head_centers=np.array(head_center_points),
-                annotation=meshhelper.get_points_from_annotation(self.psd_annotation),
-                psds=meshhelper.multiroi_to_mesh(self.psd_multiroi)
+                annotation=annotation,
+                psds=meshhelper.multiroi_to_mesh(self.psd_multiroi) if self.psd_multiroi is not None else None
             )
             payload.pld_save(pld, self.save_path)
 
